@@ -28,6 +28,6 @@ app.use("/api/tasks", taskRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(PORT, "0.0.0.0", () => {
+app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
