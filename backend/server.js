@@ -11,13 +11,11 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 connectDB();
-
-app.use(cors());
-// app.use(
-//   cors({
-//     origin: process.env.CLIENT_URL || "http://localhost:5173",
-//   }),
-// );
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
+  }),
+);
 app.use(express.json());
 
 app.get("/api/health", (req, res) => {
@@ -30,6 +28,11 @@ app.get("/api/debug", (req, res) => {
     time: new Date().toISOString(),
   });
 });
+// app.use("/api/tasks", taskRoutes);
+app.get("/api/tasks/direct-test", (req, res) => {
+  res.json({ message: "Direct tasks route working" });
+});
+
 app.use("/api/tasks", taskRoutes);
 
 app.use(notFound);
@@ -38,3 +41,4 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
