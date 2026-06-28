@@ -15,7 +15,7 @@ connectDB();
 app.use(
   cors({
     origin: process.env.CLIENT_URL || "http://localhost:5173",
-  })
+  }),
 );
 app.use(express.json());
 
@@ -28,6 +28,6 @@ app.use("/api/tasks", taskRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
