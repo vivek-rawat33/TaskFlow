@@ -82,4 +82,3 @@ Open the frontend URL shown by Vite, usually `http://localhost:5173`.
 | PUT | `/api/tasks/:id` | Update a task |
 | DELETE | `/api/tasks/:id` | Delete a task |
 
-## Deployed at `https://task-manager-mu-jet-14.vercel.app/`
