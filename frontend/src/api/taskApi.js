@@ -1,28 +1,26 @@
-import axios from "axios";
+import { apiClient } from "./apiClient";
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-export const getTasks = async (filters = {}) => {
-  const response = await api.get("/tasks", { params: filters });
+export const getTeamTasks = async (teamId, filters = {}) => {
+  const response = await apiClient.get(`/teams/${teamId}/tasks`, {
+    params: filters,
+  });
   return response.data;
 };
 
-export const createTask = async (taskData) => {
-  const response = await api.post("/tasks", taskData);
+export const createTeamTask = async (teamId, taskData) => {
+  const response = await apiClient.post(`/teams/${teamId}/tasks`, taskData);
   return response.data;
 };
 
-export const updateTask = async (id, taskData) => {
-  const response = await api.put(`/tasks/${id}`, taskData);
+export const updateTeamTask = async (teamId, taskId, taskData) => {
+  const response = await apiClient.patch(
+    `/teams/${teamId}/tasks/${taskId}`,
+    taskData,
+  );
   return response.data;
 };
 
-export const deleteTask = async (id) => {
-  const response = await api.delete(`/tasks/${id}`);
+export const deleteTeamTask = async (teamId, taskId) => {
+  const response = await apiClient.delete(`/teams/${teamId}/tasks/${taskId}`);
   return response.data;
 };
