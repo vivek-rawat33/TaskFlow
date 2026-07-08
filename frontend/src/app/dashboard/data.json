@@ -1,0 +1,47 @@
+[
+  {
+    "id": 1,
+    "header": "Create signup page",
+    "type": "Frontend",
+    "status": "Done",
+    "target": "2026-07-05",
+    "limit": "High",
+    "reviewer": "Vivek"
+  },
+  {
+    "id": 2,
+    "header": "Connect login API",
+    "type": "Backend",
+    "status": "In Process",
+    "target": "2026-07-06",
+    "limit": "High",
+    "reviewer": "Vivek"
+  },
+  {
+    "id": 3,
+    "header": "Build dashboard layout",
+    "type": "UI",
+    "status": "In Process",
+    "target": "2026-07-07",
+    "limit": "Medium",
+    "reviewer": "Team Member"
+  },
+  {
+    "id": 4,
+    "header": "Add role based permissions",
+    "type": "Feature",
+    "status": "Todo",
+    "target": "2026-07-10",
+    "limit": "High",
+    "reviewer": "Admin"
+  },
+  {
+    "id": 5,
+    "header": "Create announcements section",
+    "type": "Feature",
+    "status": "Todo",
+    "target": "2026-07-12",
+    "limit": "Medium",
+    "reviewer": "Owner"
+  }
+]

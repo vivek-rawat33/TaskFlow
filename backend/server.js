@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import { notFound, errorHandler } from "./middleware/errorHandler.js";
+import authRoutes from "./routes/authRoutes.js";
+import teamRoutes from "./routes/teamRoutes.js";
 
 dotenv.config();
 
@@ -29,12 +31,13 @@ app.get("/api/debug", (req, res) => {
     time: new Date().toISOString(),
   });
 });
-// app.use("/api/tasks", taskRoutes);
 app.get("/api/tasks/direct-test", (req, res) => {
   res.json({ message: "Direct tasks route working" });
 });
 
+app.use("/api/teams", teamRoutes);
 app.use("/api/tasks", taskRoutes);
+app.use("/api/auth", authRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

@@ -1,16 +1,18 @@
 import express from "express";
+import { protect } from "../middleware/authMiddleware.js";
 import {
   createTask,
-  deleteTask,
   getTasks,
   updateTask,
+  deleteTask,
 } from "../controllers/taskController.js";
 
-const router = express.Router();
-router.get("/ping", (req, res) => {
-  res.json({ message: "Task routes connected" });//
-});
-router.route("/").get(getTasks).post(createTask);
-router.route("/:id").put(updateTask).delete(deleteTask);
+const router = express.Router({ mergeParams: true });
+
+router.get("/", protect, getTasks);
+router.post("/", protect, createTask);
+
+router.patch("/:taskId", protect, updateTask);
+router.delete("/:taskId", protect, deleteTask);
 
 export default router;
