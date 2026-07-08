@@ -3,7 +3,7 @@ import { NavMain } from "@/components/nav-main";
 import { NavSecondary } from "@/components/nav-secondary";
 import { NavUser } from "@/components/nav-user";
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { toast } from "sonner";
 
 import {
@@ -259,10 +259,10 @@ export function AppSidebar({ ...props }) {
                 asChild
                 className="data-[slot=sidebar-menu-button]:p-1.5!"
               >
-                <a href={teamId ? `/dashboard/${teamId}` : "/dashboard"}>
+                <Link to={teamId ? `/dashboard/${teamId}` : "/dashboard"}>
                   <CommandIcon className="size-5!" />
                   <span className="text-base font-semibold">TaskFlow.</span>
-                </a>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
