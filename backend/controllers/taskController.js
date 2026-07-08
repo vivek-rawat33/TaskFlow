@@ -13,12 +13,29 @@ const cleanTaskPayload = (body) => ({
   assignedTo: body.assignedTo || null,
 });
 
+const isPastDate = (date) => {
+  if (!date) return false;
+
+  const inputDate = new Date(date);
+  inputDate.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return inputDate < today;
+};
 export const getTasks = async (req, res, next) => {
   try {
     const { status, priority, search } = req.query;
 
     const teamId = req.params.teamId;
-    const currentUserId = req.user._id;
+    const currentUserId = req.user?._id || req.user?.id || req.user?.userId;
+
+    if (!currentUserId) {
+      return res.status(401).json({
+        message: "User id not found in token",
+      });
+    }
 
     const membership = await TeamMember.findOne({
       teamId,
@@ -60,9 +77,14 @@ export const getTasks = async (req, res, next) => {
       tasks,
     });
   } catch (error) {
-    next(error);
+    console.error("GET TASKS ERROR:", error);
+    return res.status(500).json({
+      message: "Failed to fetch tasks",
+      error: error.message,
+    });
   }
 };
+
 export const createTask = async (req, res, next) => {
   try {
     const { isValid, errors } = validateTaskInput(req.body);
@@ -72,7 +94,11 @@ export const createTask = async (req, res, next) => {
     if (!title || title.trim() === "") {
       return res.status(400).json({ message: "Title is required" });
     }
-
+    if (req.body.dueDate && isPastDate(req.body.dueDate)) {
+      return res.status(400).json({
+        message: "Due date cannot be in the past",
+      });
+    }
     if (!isValid) {
       return res.status(400).json({ message: "Validation failed", errors });
     }
@@ -124,7 +150,11 @@ export const updateTask = async (req, res, next) => {
     const currentUserId = req.user._id;
 
     const { isValid, errors } = validateTaskInput(req.body, true);
-
+    if (req.body.dueDate && isPastDate(req.body.dueDate)) {
+      return res.status(400).json({
+        message: "Due date cannot be in the past",
+      });
+    }
     if (!isValid) {
       return res.status(400).json({
         message: "Validation failed",

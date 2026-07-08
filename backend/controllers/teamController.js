@@ -113,11 +113,19 @@ export const addTeamMember = async (req, res, next) => {
   try {
     const teamId = req.params.teamId;
     const currentUserId = req.user._id;
-    const { email, role } = req.body;
+    const { email, role = "member" } = req.body;
 
-    if (!email) {
+    if (!email || email.trim() === "") {
       return res.status(400).json({
         message: "Email is required",
+      });
+    }
+
+    const allowedRoles = ["admin", "member", "viewer"];
+
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({
+        message: "Invalid role",
       });
     }
 
@@ -128,21 +136,23 @@ export const addTeamMember = async (req, res, next) => {
 
     if (!membership) {
       return res.status(403).json({
-        message: "you are not a member of this team",
+        message: "You are not a member of this team",
       });
     }
 
     if (membership.role !== "owner" && membership.role !== "admin") {
       return res.status(403).json({
-        message: "you do not have the permission to add members",
+        message: "You do not have permission to add members",
       });
     }
 
-    const user = await User.findOne({ email: email });
+    const user = await User.findOne({
+      email: email.trim().toLowerCase(),
+    });
 
     if (!user) {
       return res.status(404).json({
-        message: "User not found",
+        message: "User not found. User must sign up first.",
       });
     }
 
@@ -156,10 +166,11 @@ export const addTeamMember = async (req, res, next) => {
         message: "User is already a member of this team",
       });
     }
+
     const teamMember = await TeamMember.create({
       teamId,
       userId: user._id,
-      role: role || "member",
+      role,
     });
 
     const populatedMember = await TeamMember.findById(teamMember._id).populate(
@@ -167,7 +178,7 @@ export const addTeamMember = async (req, res, next) => {
       "name email",
     );
 
-    res.status(200).json({
+    return res.status(201).json({
       message: "Member added successfully",
       member: populatedMember,
     });
@@ -178,9 +189,8 @@ export const addTeamMember = async (req, res, next) => {
 
 export const removeTeamMember = async (req, res, next) => {
   try {
-    const teamId = req.params.teamId;
+    const { teamId, memberId } = req.params;
     const currentUserId = req.user._id;
-    const memberId = req.params.memberId;
 
     const currentMembership = await TeamMember.findOne({
       teamId,
@@ -203,8 +213,8 @@ export const removeTeamMember = async (req, res, next) => {
     }
 
     const memberToRemove = await TeamMember.findOne({
-      _id: memberId,
       teamId,
+      userId: memberId,
     });
 
     if (!memberToRemove) {
@@ -219,20 +229,43 @@ export const removeTeamMember = async (req, res, next) => {
       });
     }
 
+    if (String(currentUserId) === String(memberId)) {
+      return res.status(400).json({
+        message: "You cannot remove yourself",
+      });
+    }
+
+    if (currentMembership.role === "admin" && memberToRemove.role === "admin") {
+      return res.status(403).json({
+        message: "Admin cannot remove another admin",
+      });
+    }
+
     await TeamMember.deleteOne({
-      _id: memberId,
       teamId,
+      userId: memberId,
     });
+
+    await Task.updateMany(
+      {
+        teamId,
+        assignedTo: memberId,
+      },
+      {
+        $set: {
+          assignedTo: null,
+        },
+      },
+    );
 
     return res.status(200).json({
       message: "Member removed successfully",
-      memberId: memberToRemove._id,
+      memberId,
     });
   } catch (error) {
     next(error);
   }
 };
-
 export const changeMemberRole = async (req, res, next) => {
   try {
     const teamId = req.params.teamId;
@@ -270,8 +303,8 @@ export const changeMemberRole = async (req, res, next) => {
     }
 
     const memberToUpdate = await TeamMember.findOne({
-      _id: memberId,
       teamId,
+      userId: memberId,
     });
 
     if (!memberToUpdate) {

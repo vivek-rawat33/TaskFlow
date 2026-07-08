@@ -1,6 +1,9 @@
 import { apiClient } from "./apiClient";
 
 export const getTeamTasks = async (teamId, filters = {}) => {
+  if (!teamId) {
+    throw new Error("teamId is required to fetch tasks");
+  }
   const response = await apiClient.get(`/teams/${teamId}/tasks`, {
     params: filters,
   });

@@ -39,7 +39,6 @@ export function SignupForm({ className, ...props }) {
     e.preventDefault();
     setError("");
 
-    console.log("hanlde subkut");
     if (formData.password !== formData.confirmPassword) {
       setError("Password do not match");
       return;

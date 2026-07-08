@@ -6,7 +6,7 @@ export const signupUser = async (userData) => {
 };
 
 export const loginUser = async (credentials) => {
-  const response = await apiClient.post("/auth/login", credentials);
+  const response = await apiClient.post("/auth/signin", credentials);
   return response.data;
 };
 
