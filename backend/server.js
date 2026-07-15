@@ -21,9 +21,15 @@ const allowedOrigins = [
   "https://task-manager-git-main-vivek-rawat33s-projects.vercel.app",
 ];
 
+const vercelPreviewPattern = /^https:\/\/task-manager-[a-z0-9-]+\.vercel\.app$/;
+
 const corsOptions = {
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (
+      !origin ||
+      allowedOrigins.includes(origin) ||
+      vercelPreviewPattern.test(origin)
+    ) {
       return callback(null, true);
     }
 
