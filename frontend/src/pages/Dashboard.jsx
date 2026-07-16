@@ -18,6 +18,8 @@ import {
 } from "@/api/teamApi";
 import { toast } from "sonner";
 
+import { StatusChart } from "@/components/status-chart";
+
 import { Badge } from "@/components/ui/badge";
 
 import {
@@ -286,6 +288,13 @@ export default function Dashboard() {
                         <ChartAreaInteractive tasks={tasks} />
                       </div>
 
+                      <div className="grid gap-4 px-4 lg:grid-cols-2 lg:px-6">
+                        <StatusChart tasks={tasks} />
+
+                        <div className="rounded-xl border bg-card p-6 text-sm text-muted-foreground">
+                          Priority chart will come here.
+                        </div>
+                      </div>
                       <DataTable
                         data={
                           isMyTasksPage

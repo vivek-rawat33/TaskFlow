@@ -226,15 +226,19 @@ const columns = [
     },
     enableHiding: false,
     meta: {
-      headerClassName: "min-w-[260px]",
-      cellClassName: "min-w-[260px]",
+      headerClassName: "w-[280px] min-w-[280px] max-w-[280px]",
+      cellClassName: "w-[280px] min-w-[280px] max-w-[280px] overflow-hidden",
     },
   },
   {
     accessorKey: "type",
     header: "Category",
     cell: ({ row }) => (
-      <Badge variant="outline" className="px-1.5 text-muted-foreground">
+      <Badge
+        variant="outline"
+        className="max-w-32.5 truncate px-2 text-muted-foreground"
+        title={row.original.type}
+      >
         {row.original.type}
       </Badge>
     ),
@@ -1561,15 +1565,16 @@ function TableCellViewer({
       direction={isMobile ? "bottom" : "right"}
     >
       <DrawerTrigger asChild>
-        <Button
-          variant="link"
-          className="block max-w-55 truncate px-0 text-left text-foreground sm:max-w-65 md:max-w-[320px]"
-          title={item.header}
+        <button
+          type="button"
+          className="group flex w-full min-w-0 items-center text-left outline-none"
+          title={`${item.header} - Click to view details`}
         >
-          {item.header}
-        </Button>
+          <span className="relative block min-w-0 truncate rounded-sm py-1 pr-2 text-sm font-medium text-foreground/85 underline-offset-4 transition-all duration-150 group-hover:translate-x-0.5 group-hover:underline group-hover:decoration-dotted group-hover:decoration-foreground/50 group-focus-visible:underline group-focus-visible:decoration-dotted">
+            {item.header}
+          </span>
+        </button>
       </DrawerTrigger>
-
       <DrawerContent>
         <DrawerHeader className="gap-1">
           <DrawerTitle>{formData.header}</DrawerTitle>
