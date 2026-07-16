@@ -1,8 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Pie, PieChart } from "recharts";
-
+import { Pie, PieChart, Sector } from "recharts";
 import {
   Card,
   CardContent,
@@ -16,6 +15,40 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+
+function renderActiveShape(props) {
+  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } =
+    props;
+
+  return (
+    <g>
+      <Sector
+        cx={cx}
+        cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius + 7}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+        className="transition-all duration-200"
+        style={{
+          filter: `drop-shadow(0px 0px 10px ${fill})`,
+        }}
+      />
+
+      <Sector
+        cx={cx}
+        cy={cy}
+        innerRadius={outerRadius + 9}
+        outerRadius={outerRadius + 11}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+        opacity={0.35}
+      />
+    </g>
+  );
+}
 
 const chartConfig = {
   todo: {
@@ -67,7 +100,7 @@ function getStatusCounts(tasks = []) {
 
 export function StatusChart({ tasks = [] }) {
   const statusCounts = React.useMemo(() => getStatusCounts(tasks), [tasks]);
-
+  const [activeIndex, setActiveIndex] = React.useState(null);
   const totalTasks =
     statusCounts.todo + statusCounts.inProcess + statusCounts.done;
 
@@ -105,14 +138,14 @@ export function StatusChart({ tasks = [] }) {
 
       <CardContent>
         {totalTasks === 0 ? (
-          <div className="flex h-[260px] items-center justify-center text-sm text-muted-foreground">
+          <div className="flex h-65 items-center justify-center text-sm text-muted-foreground">
             No tasks available.
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-[1fr_180px] md:items-center">
             <ChartContainer
               config={chartConfig}
-              className="mx-auto aspect-square h-[240px]"
+              className="mx-auto aspect-square h-60"
             >
               <PieChart>
                 <ChartTooltip
@@ -128,6 +161,10 @@ export function StatusChart({ tasks = [] }) {
                   outerRadius={86}
                   paddingAngle={3}
                   strokeWidth={4}
+                  activeIndex={activeIndex ?? undefined}
+                  activeShape={renderActiveShape}
+                  onMouseEnter={(_, index) => setActiveIndex(index)}
+                  onMouseLeave={() => setActiveIndex(null)}
                 />
               </PieChart>
             </ChartContainer>
