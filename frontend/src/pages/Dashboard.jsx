@@ -4,6 +4,8 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
 import { DataTable } from "@/components/data-table";
 import { SectionCards } from "@/components/section-cards";
+import { DeadlineChart } from "@/components/deadline-chart";
+import { MemberPerformanceChart } from "@/components/member-performance-chart";
 import { PriorityChart } from "@/components/priority-chart";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -286,10 +288,8 @@ export default function Dashboard() {
                     <>
                       {/* Charts Section */}
                       <div className="space-y-4 px-4 lg:px-6">
-                        {/* Mobile + Tablet + Desktop */}
                         <ChartAreaInteractive tasks={tasks} />
 
-                        {/* Status mobile/tablet/desktop, Priority only desktop */}
                         <div className="grid gap-4 xl:grid-cols-2">
                           <StatusChart tasks={tasks} />
 
@@ -298,14 +298,11 @@ export default function Dashboard() {
                           </div>
                         </div>
 
-                        {/* 
-    Future desktop-only charts
+                        <div className="hidden xl:grid xl:grid-cols-2 xl:gap-4">
+                          <DeadlineChart tasks={tasks} />
 
-    <div className="hidden xl:grid xl:grid-cols-2 xl:gap-4">
-      <DeadlineChart tasks={tasks} />
-      <MemberPerformanceChart tasks={tasks} />
-    </div>
-  */}
+                          <MemberPerformanceChart tasks={tasks} />
+                        </div>
                       </div>
                       <DataTable
                         data={

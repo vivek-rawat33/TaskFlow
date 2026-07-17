@@ -102,8 +102,8 @@ export function PriorityChart({ tasks = [] }) {
             No priority data available.
           </div>
         ) : (
-          <div className="space-y-4">
-            <ChartContainer config={chartConfig} className="h-[240px] w-full">
+          <div>
+            <ChartContainer config={chartConfig} className="h-65 w-full">
               <BarChart
                 data={chartData}
                 margin={{
@@ -154,40 +154,6 @@ export function PriorityChart({ tasks = [] }) {
                 </Bar>
               </BarChart>
             </ChartContainer>
-
-            <div className="grid gap-2 sm:grid-cols-3">
-              {chartData.map((item) => {
-                const percentage =
-                  totalTasks > 0
-                    ? Math.round((item.count / totalTasks) * 100)
-                    : 0;
-
-                return (
-                  <div
-                    key={item.priority}
-                    className="flex items-center justify-between gap-3 rounded-lg border bg-muted/20 px-3 py-2"
-                  >
-                    <div className="flex min-w-0 items-center gap-2">
-                      <span
-                        className="size-2.5 shrink-0 rounded-full"
-                        style={{ backgroundColor: item.fill }}
-                      />
-
-                      <span className="truncate text-sm font-medium">
-                        {item.priority}
-                      </span>
-                    </div>
-
-                    <div className="text-right">
-                      <p className="text-sm font-semibold">{item.count}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {percentage}%
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
           </div>
         )}
       </CardContent>
