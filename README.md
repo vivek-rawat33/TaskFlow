@@ -348,33 +348,6 @@ DELETE /api/tasks/:taskId
 
 ---
 
-## Screenshots
-
-Add your screenshots inside a `screenshots` folder and update the image paths below.
-
-```md
-![Dashboard](./screenshots/dashboard.png)
-![Task Table](./screenshots/tasks.png)
-![Analytics](./screenshots/analytics.png)
-![Mobile View](./screenshots/mobile.png)
-```
-
----
-
-## Suggested Screenshots to Add
-
-For a better GitHub presentation, add screenshots of:
-
-1. Signup page
-2. Signin page
-3. Dashboard overview
-4. Task table
-5. Analytics charts
-6. Team members section
-7. Mobile/tablet view
-
----
-
 ## Main Learning Outcomes
 
 This project helped me understand and implement:
