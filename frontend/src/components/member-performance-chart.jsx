@@ -90,9 +90,9 @@ function getMemberPerformance(tasks = [], members = []) {
   });
 
   return Array.from(memberMap.values())
-    .filter((member) => member.assigned > 0 || member.completed > 0)
+    .filter((member) => member.completed > 0)
     .sort((a, b) => b.completed - a.completed)
-    .slice(0, 6);
+    .slice(0, 5);
 }
 
 export function MemberPerformanceChart({ tasks = [], members = [] }) {
@@ -104,16 +104,16 @@ export function MemberPerformanceChart({ tasks = [], members = [] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Member performance</CardTitle>
+        <CardTitle>Top performance</CardTitle>
         <CardDescription>
-          Completed tasks by assigned team member
+          Top members by completed assigned tasks
         </CardDescription>
       </CardHeader>
 
       <CardContent>
         {chartData.length === 0 ? (
           <div className="flex h-70 items-center justify-center text-sm text-muted-foreground">
-            No assigned task data available.
+            No completed task data available.
           </div>
         ) : (
           <div>

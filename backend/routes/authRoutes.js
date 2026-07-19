@@ -3,6 +3,8 @@ import {
   userSignup,
   userSignin,
   getMe,
+  forgotPassword,
+  resetPassword,
 } from "../controllers/authController.js";
 import { protect } from "../middleware/authMiddleware.js";
 const router = express.Router();
@@ -10,4 +12,5 @@ const router = express.Router();
 router.post("/signup", userSignup);
 router.post("/signin", userSignin);
 router.get("/me", protect, getMe);
+
 export default router;

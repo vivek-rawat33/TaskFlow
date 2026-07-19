@@ -85,12 +85,13 @@ export function LoginForm({ className, ...props }) {
               <Field>
                 <div className="flex items-center">
                   <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <a
-                    href="#"
-                    className="ml-auto text-sm underline-offset-2 hover:underline"
+                  <button
+                    type="button"
+                    onClick={() => navigate("/forgot-password")}
+                    className="ml-auto text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
                   >
-                    Forgot your password?
-                  </a>
+                    Forgot password?
+                  </button>
                 </div>
                 <Input
                   name="password"

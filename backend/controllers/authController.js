@@ -1,7 +1,8 @@
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import User from "../models/userModel.js";
-
+import { sendEmail } from "../utils/sendEmail.js";
 //check existing user and password match then login user and return token
 export const userSignin = async (req, res, next) => {
   try {
@@ -102,3 +103,6 @@ export const getMe = async (req, res, next) => {
     next(error);
   }
 };
+
+
+
