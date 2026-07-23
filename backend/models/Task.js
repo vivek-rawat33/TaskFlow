@@ -61,6 +61,19 @@ const taskSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+taskSchema.index(
+  { teamId: 1, createdAt: -1 },
+  {
+    name: "tasks_by_team_newest",
+  },
+);
+taskSchema.index(
+  { teamId: 1, assignedTo: 1 },
+  {
+    name: "tasks_by_team_assignee",
+  },
+);
+
 const Task = mongoose.model("Task", taskSchema);
 
 export default Task;

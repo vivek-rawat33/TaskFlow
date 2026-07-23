@@ -23,7 +23,20 @@ const teamMemberSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
-teamMemberSchema.index({ teamId: 1, userId: 1 }, { unique: true });
+
+teamMemberSchema.index(
+  { userId: 1 },
+  {
+    name: "Membership_by_user",
+  },
+);
+teamMemberSchema.index(
+  { teamId: 1, userId: 1 },
+  { unique: true },
+  {
+    name: "unique_teamMember",
+  },
+);
 
 const TeamMember = mongoose.model("TeamMember", teamMemberSchema);
 

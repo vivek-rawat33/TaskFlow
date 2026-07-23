@@ -26,6 +26,12 @@ const announcementSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+announcementSchema.index(
+  { teamId: 1, createdAt: -1 },
+  {
+    name: "announcements_by_team_newest",
+  },
+);
 const Announcement = mongoose.model("Announcement", announcementSchema);
 
 export default Announcement;
