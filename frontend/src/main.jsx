@@ -6,6 +6,7 @@ import "./index.css";
 import { TooltipProvider } from "./components/ui/tooltip.jsx";
 import { ThemeProvider } from "./components/theme-provider.jsx";
 import { Analytics } from "@vercel/analytics/react";
+import "@fontsource-variable/geist/wght.css";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
