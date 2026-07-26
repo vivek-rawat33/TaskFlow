@@ -1,52 +1,62 @@
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { landingConfig } from "../../data/taskflowLandingData";
-
-const headingVariants = {
-  hidden: {
-    opacity: 0,
-    y: 24,
-    filter: "blur(6px)",
-  },
-  visible: {
-    opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-    transition: {
-      duration: 0.65,
-      ease: [0.22, 1, 0.36, 1],
-    },
-  },
-};
-
-const workflowContainerVariants = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.14,
-      delayChildren: 0.3,
-    },
-  },
-};
-
-const stepVariants = {
-  hidden: {
-    opacity: 0,
-    y: 32,
-    scale: 0.97,
-  },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: {
-      duration: 0.55,
-      ease: [0.22, 1, 0.36, 1],
-    },
-  },
-};
+import { useLandingMotion } from "../../hooks/useLandingMotion";
 
 export default function LandingWorkflow() {
+  const { reduceMotion, allowDesktopMotion } = useLandingMotion();
+
+  const headingVariants = {
+    hidden: {
+      opacity: 0,
+      y: reduceMotion ? 10 : 24,
+      filter: reduceMotion ? "none" : "blur(6px)",
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      filter: "none",
+      transition: {
+        duration: reduceMotion ? 0.3 : 0.65,
+        ease: [0.22, 1, 0.36, 1],
+      },
+    },
+  };
+
+  const workflowContainerVariants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: reduceMotion ? 0 : 0.14,
+        delayChildren: reduceMotion ? 0 : 0.3,
+      },
+    },
+  };
+
+  const stepVariants = {
+    hidden: reduceMotion
+      ? {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+        }
+      : {
+          opacity: 0,
+          y: 32,
+          scale: 0.97,
+        },
+
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        duration: reduceMotion ? 0 : 0.55,
+        ease: [0.22, 1, 0.36, 1],
+      },
+    },
+  };
+
   const workflow = landingConfig.workflow;
 
   return (
@@ -54,10 +64,10 @@ export default function LandingWorkflow() {
       id="workflow"
       className="relative overflow-hidden bg-[#07090d] px-5 py-20 sm:px-6 sm:py-28 lg:px-8"
     >
-      {/* Background glow */}
+      {/* Desktop-only background glow */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-1/2 h-[600px] w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-400/[0.035] blur-[150px]"
+        className="pointer-events-none absolute left-1/2 top-1/2 hidden h-[600px] w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-400/[0.035] blur-[150px] md:block"
       />
 
       <div className="relative mx-auto max-w-7xl">
@@ -67,7 +77,7 @@ export default function LandingWorkflow() {
           whileInView="visible"
           viewport={{
             once: true,
-            amount: 0.4,
+            amount: reduceMotion ? 0.2 : 0.4,
           }}
           className="mx-auto max-w-3xl text-center"
         >
@@ -95,7 +105,6 @@ export default function LandingWorkflow() {
           </motion.p>
         </motion.div>
 
-        {/* Workflow */}
         <div className="relative mt-16">
           {/* Desktop base line */}
           <div
@@ -104,44 +113,48 @@ export default function LandingWorkflow() {
           />
 
           {/* Desktop animated line */}
-          <motion.div
-            aria-hidden="true"
-            initial={{ scaleX: 0 }}
-            whileInView={{ scaleX: 1 }}
-            viewport={{
-              once: true,
-              amount: 0.35,
-            }}
-            transition={{
-              duration: 1.25,
-              delay: 0.15,
-              ease: [0.22, 1, 0.36, 1],
-            }}
-            className="absolute left-[12.5%] right-[12.5%] top-8 hidden h-px origin-left bg-gradient-to-r from-emerald-300/30 via-emerald-300 to-emerald-300/30 lg:block"
-          />
+          {allowDesktopMotion && (
+            <motion.div
+              aria-hidden="true"
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              viewport={{
+                once: true,
+                amount: 0.35,
+              }}
+              transition={{
+                duration: 1.25,
+                delay: 0.15,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              className="absolute left-[12.5%] right-[12.5%] top-8 hidden h-px origin-left bg-gradient-to-r from-emerald-300/30 via-emerald-300 to-emerald-300/30 lg:block"
+            />
+          )}
 
-          {/* Animated moving light */}
-          <motion.div
-            aria-hidden="true"
-            initial={{
-              left: "12.5%",
-              opacity: 0,
-            }}
-            whileInView={{
-              left: "87.5%",
-              opacity: [0, 1, 1, 0],
-            }}
-            viewport={{
-              once: true,
-              amount: 0.35,
-            }}
-            transition={{
-              duration: 1.5,
-              delay: 0.3,
-              ease: "easeInOut",
-            }}
-            className="absolute top-[29px] hidden h-[3px] w-10 -translate-x-1/2 rounded-full bg-emerald-200 blur-[2px] lg:block"
-          />
+          {/* Desktop moving highlight */}
+          {allowDesktopMotion && (
+            <motion.div
+              aria-hidden="true"
+              initial={{
+                left: "12.5%",
+                opacity: 0,
+              }}
+              whileInView={{
+                left: "87.5%",
+                opacity: [0, 1, 1, 0],
+              }}
+              viewport={{
+                once: true,
+                amount: 0.35,
+              }}
+              transition={{
+                duration: 1.5,
+                delay: 0.3,
+                ease: "easeInOut",
+              }}
+              className="absolute top-[29px] hidden h-[3px] w-10 -translate-x-1/2 rounded-full bg-emerald-200 blur-[2px] lg:block"
+            />
+          )}
 
           {/* Mobile base line */}
           <div
@@ -149,18 +162,17 @@ export default function LandingWorkflow() {
             className="absolute bottom-8 left-8 top-8 w-px bg-white/10 lg:hidden"
           />
 
-          {/* Mobile animated line */}
+          {/* Mobile line growth */}
           <motion.div
             aria-hidden="true"
             initial={{ scaleY: 0 }}
             whileInView={{ scaleY: 1 }}
             viewport={{
               once: true,
-              amount: 0.15,
+              amount: 0.12,
             }}
             transition={{
-              duration: 1.2,
-              delay: 0.15,
+              duration: reduceMotion ? 0.55 : 1.2,
               ease: [0.22, 1, 0.36, 1],
             }}
             className="absolute bottom-8 left-8 top-8 w-px origin-top bg-gradient-to-b from-emerald-300 via-emerald-300/60 to-emerald-300/10 lg:hidden"
@@ -172,8 +184,8 @@ export default function LandingWorkflow() {
             whileInView="visible"
             viewport={{
               once: true,
-              amount: 0.12,
-              margin: "0px 0px -80px 0px",
+              amount: reduceMotion ? 0.05 : 0.12,
+              margin: "0px 0px -60px 0px",
             }}
             className="relative grid gap-5 lg:grid-cols-4 lg:gap-6"
           >
@@ -181,9 +193,13 @@ export default function LandingWorkflow() {
               <motion.article
                 key={step.number}
                 variants={stepVariants}
-                whileHover={{
-                  y: -7,
-                }}
+                whileHover={
+                  allowDesktopMotion
+                    ? {
+                        y: -7,
+                      }
+                    : undefined
+                }
                 transition={{
                   type: "spring",
                   stiffness: 280,
@@ -193,10 +209,14 @@ export default function LandingWorkflow() {
               >
                 {/* Number node */}
                 <motion.div
-                  whileHover={{
-                    scale: 1.08,
-                    rotate: -4,
-                  }}
+                  whileHover={
+                    allowDesktopMotion
+                      ? {
+                          scale: 1.08,
+                          rotate: -4,
+                        }
+                      : undefined
+                  }
                   transition={{
                     type: "spring",
                     stiffness: 320,
@@ -206,54 +226,66 @@ export default function LandingWorkflow() {
                 >
                   {step.number}
 
-                  {/* Node pulse */}
-                  <motion.span
-                    aria-hidden="true"
-                    initial={{
-                      opacity: 0,
-                      scale: 0.75,
-                    }}
-                    whileInView={{
-                      opacity: [0, 0.45, 0],
-                      scale: [0.75, 1.35, 1.55],
-                    }}
-                    viewport={{ once: true }}
-                    transition={{
-                      duration: 1.2,
-                      delay: 0.45 + index * 0.15,
-                    }}
-                    className="absolute inset-0 -z-10 rounded-2xl border border-emerald-300/30"
-                  />
+                  {/* Desktop-only pulse */}
+                  {allowDesktopMotion && (
+                    <motion.span
+                      aria-hidden="true"
+                      initial={{
+                        opacity: 0,
+                        scale: 0.75,
+                      }}
+                      whileInView={{
+                        opacity: [0, 0.45, 0],
+                        scale: [0.75, 1.35, 1.55],
+                      }}
+                      viewport={{ once: true }}
+                      transition={{
+                        duration: 1.2,
+                        delay: 0.45 + index * 0.15,
+                      }}
+                      className="absolute inset-0 -z-10 rounded-2xl border border-emerald-300/30"
+                    />
+                  )}
                 </motion.div>
 
                 {/* Step card */}
                 <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.025] p-5 lg:mt-8 lg:min-h-[215px] lg:p-6">
-                  {/* Hover glow */}
-                  <motion.div
-                    aria-hidden="true"
-                    initial={{
-                      opacity: 0,
-                      scale: 0.8,
-                    }}
-                    whileHover={{
-                      opacity: 1,
-                      scale: 1,
-                    }}
-                    transition={{ duration: 0.35 }}
-                    className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-emerald-300/[0.08] blur-3xl"
-                  />
+                  {/* Desktop-only hover glow */}
+                  {allowDesktopMotion && (
+                    <motion.div
+                      aria-hidden="true"
+                      initial={{
+                        opacity: 0,
+                        scale: 0.8,
+                      }}
+                      whileHover={{
+                        opacity: 1,
+                        scale: 1,
+                      }}
+                      transition={{
+                        duration: 0.35,
+                      }}
+                      className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-emerald-300/[0.08] blur-3xl"
+                    />
+                  )}
 
-                  {/* Animated top border */}
-                  <motion.div
-                    aria-hidden="true"
-                    initial={{ scaleX: 0 }}
-                    whileHover={{ scaleX: 1 }}
-                    transition={{
-                      duration: 0.35,
-                      ease: [0.22, 1, 0.36, 1],
-                    }}
-                    className="absolute inset-x-0 top-0 h-px origin-left bg-gradient-to-r from-transparent via-emerald-300/70 to-transparent"
-                  />
+                  {/* Desktop-only animated border */}
+                  {allowDesktopMotion && (
+                    <motion.div
+                      aria-hidden="true"
+                      initial={{
+                        scaleX: 0,
+                      }}
+                      whileHover={{
+                        scaleX: 1,
+                      }}
+                      transition={{
+                        duration: 0.35,
+                        ease: [0.22, 1, 0.36, 1],
+                      }}
+                      className="absolute inset-x-0 top-0 h-px origin-left bg-gradient-to-r from-transparent via-emerald-300/70 to-transparent"
+                    />
+                  )}
 
                   <div className="relative">
                     <div className="flex items-center justify-between">
@@ -261,7 +293,7 @@ export default function LandingWorkflow() {
                         Step {step.number}
                       </span>
 
-                      {index < workflow.length - 1 && (
+                      {allowDesktopMotion && index < workflow.length - 1 && (
                         <motion.div
                           animate={{
                             x: [0, 4, 0],

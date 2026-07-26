@@ -3,13 +3,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { landingNavigation } from "../../data/taskflowLandingData";
+import { useLandingMotion } from "../../hooks/useLandingMotion";
 
 const mobileMenuVariants = {
   closed: {
     opacity: 0,
-    y: -12,
+    y: -10,
     transition: {
-      duration: 0.16,
+      duration: 0.15,
       ease: "easeIn",
     },
   },
@@ -17,7 +18,7 @@ const mobileMenuVariants = {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.22,
+      duration: 0.2,
       ease: [0.22, 1, 0.36, 1],
     },
   },
@@ -27,6 +28,7 @@ export default function LandingNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeItem, setActiveItem] = useState("Features");
   const [hasScrolled, setHasScrolled] = useState(false);
+  const { reduceMotion } = useLandingMotion();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -145,8 +147,7 @@ export default function LandingNavbar() {
               opacity: mobileMenuOpen ? 0 : 1,
             }}
             transition={{
-              duration: 0.15,
-              ease: "easeOut",
+              duration: reduceMotion ? 0.1 : 0.15,
             }}
             className="absolute"
           >
@@ -159,8 +160,7 @@ export default function LandingNavbar() {
               opacity: mobileMenuOpen ? 1 : 0,
             }}
             transition={{
-              duration: 0.15,
-              ease: "easeOut",
+              duration: reduceMotion ? 0.1 : 0.15,
             }}
             className="absolute"
           >
@@ -172,22 +172,21 @@ export default function LandingNavbar() {
       <AnimatePresence initial={false}>
         {mobileMenuOpen && (
           <motion.div
-            key="mobile-menu-wrapper"
+            key="mobile-menu"
+            variants={mobileMenuVariants}
             initial="closed"
             animate="open"
             exit="closed"
-            variants={mobileMenuVariants}
             className="md:hidden"
           >
-            {/* No backdrop-blur here */}
             <button
               type="button"
-              aria-label="Close mobile menu"
+              aria-label="Close navigation menu"
               onClick={() => setMobileMenuOpen(false)}
-              className="fixed inset-0 top-18 -z-10 bg-black/60"
+              className="fixed inset-0 top-[72px] -z-10 bg-black/60"
             />
 
-            <div className="border-t border-white/10 bg-[#090b10] px-5 py-5 shadow-2xl">
+            <div className="border-t border-white/10 bg-[#090b10] px-5 py-5 shadow-xl">
               <div className="mx-auto flex max-w-7xl flex-col gap-1">
                 {landingNavigation.map((item) => {
                   const isActive = activeItem === item.label;
@@ -197,7 +196,7 @@ export default function LandingNavbar() {
                       key={item.label}
                       href={item.href}
                       onClick={() => handleNavigationClick(item.label)}
-                      className={`relative rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
+                      className={`rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
                         isActive
                           ? "bg-emerald-300/[0.08] text-white"
                           : "text-zinc-400 active:bg-white/5"

@@ -1,33 +1,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Play } from "lucide-react";
 import { Link } from "react-router-dom";
-
-const heroContainerVariants = {
-  hidden: {},
-  visible: {
-    transition: {
-      delayChildren: 0.15,
-      staggerChildren: 0.12,
-    },
-  },
-};
-
-const heroItemVariants = {
-  hidden: {
-    opacity: 0,
-    y: 28,
-    filter: "blur(8px)",
-  },
-  visible: {
-    opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-    transition: {
-      duration: 0.7,
-      ease: [0.22, 1, 0.36, 1],
-    },
-  },
-};
+import { useLandingMotion } from "../../hooks/useLandingMotion";
 
 const previewVariants = {
   hidden: {
@@ -50,6 +24,33 @@ const previewVariants = {
 };
 
 function LandingHero() {
+  const { reduceMotion, allowDesktopMotion } = useLandingMotion();
+  const heroContainerVariants = {
+    hidden: {},
+    visible: {
+      transition: {
+        delayChildren: reduceMotion ? 0.02 : 0.15,
+        staggerChildren: reduceMotion ? 0.04 : 0.12,
+      },
+    },
+  };
+
+  const heroItemVariants = {
+    hidden: {
+      opacity: 0,
+      y: reduceMotion ? 10 : 28,
+      filter: reduceMotion ? "none" : "blur(8px)",
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      filter: "none",
+      transition: {
+        duration: reduceMotion ? 0.3 : 0.7,
+        ease: [0.22, 1, 0.36, 1],
+      },
+    },
+  };
   return (
     <section className="relative overflow-hidden bg-[#07090d] px-5 pb-20 pt-32 text-white sm:px-6 sm:pb-28 sm:pt-40 lg:px-8">
       {/* Background grid */}
@@ -63,33 +64,36 @@ function LandingHero() {
       />
 
       {/* Background glows */}
-      <motion.div
-        aria-hidden="true"
-        animate={{
-          opacity: [0.3, 0.5, 0.3],
-          scale: [1, 1.08, 1],
-        }}
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-        className="pointer-events-none absolute left-1/2 top-10 h-[420px] w-[620px] -translate-x-1/2 rounded-full bg-emerald-400/10 blur-[120px]"
-      />
-
-      <motion.div
-        aria-hidden="true"
-        animate={{
-          x: [0, 24, 0],
-          y: [0, -18, 0],
-        }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-        className="pointer-events-none absolute right-[-120px] top-[280px] h-[300px] w-[300px] rounded-full bg-violet-500/10 blur-[110px]"
-      />
+      {allowDesktopMotion && (
+        <motion.div
+          aria-hidden="true"
+          animate={{
+            opacity: [0.3, 0.5, 0.3],
+            scale: [1, 1.08, 1],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="pointer-events-none absolute left-1/2 top-10 h-[420px] w-[620px] -translate-x-1/2 rounded-full bg-emerald-400/10 blur-[120px]"
+        />
+      )}
+      {allowDesktopMotion && (
+        <motion.div
+          aria-hidden="true"
+          animate={{
+            x: [0, 24, 0],
+            y: [0, -18, 0],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="pointer-events-none absolute right-[-120px] top-[280px] h-[300px] w-[300px] rounded-full bg-violet-500/10 blur-[110px]"
+        />
+      )}
 
       <div className="relative mx-auto max-w-7xl">
         <motion.div
@@ -145,19 +149,17 @@ function LandingHero() {
             className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row"
           >
             <motion.div
-              whileHover={{
-                y: -3,
-                scale: 1.02,
-              }}
+              whileHover={
+                allowDesktopMotion
+                  ? {
+                      y: -3,
+                      scale: 1.02,
+                    }
+                  : undefined
+              }
               whileTap={{
-                scale: 0.97,
+                scale: reduceMotion ? 0.99 : 0.97,
               }}
-              transition={{
-                type: "spring",
-                stiffness: 350,
-                damping: 22,
-              }}
-              className="w-full sm:w-auto"
             >
               <Link
                 to="/signup"

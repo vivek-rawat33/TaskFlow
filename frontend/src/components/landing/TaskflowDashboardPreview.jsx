@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useLandingMotion } from "../../hooks/useLandingMotion";
 import {
   BarChart3,
   Bell,
@@ -11,42 +12,6 @@ import {
   Settings,
   Users,
 } from "lucide-react";
-
-const previewVariants = {
-  hidden: {
-    opacity: 0,
-    y: 80,
-    scale: 0.96,
-    rotateX: 8,
-  },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    rotateX: 0,
-    transition: {
-      duration: 0.9,
-      ease: [0.22, 1, 0.36, 1],
-      when: "beforeChildren",
-      staggerChildren: 0.08,
-    },
-  },
-};
-
-const childVariants = {
-  hidden: {
-    opacity: 0,
-    y: 18,
-  },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.5,
-      ease: [0.22, 1, 0.36, 1],
-    },
-  },
-};
 
 const sidebarItems = [
   {
@@ -102,28 +67,57 @@ const tasks = [
 const chartBars = [38, 55, 46, 72, 61, 88, 76];
 
 function TaskFlowDashboardPreview() {
+  const { reduceMotion, allowDesktopMotion } = useLandingMotion();
+
+  const childVariants = {
+    hidden: reduceMotion
+      ? {
+          opacity: 1,
+          y: 0,
+        }
+      : {
+          opacity: 0,
+          y: 18,
+        },
+
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: reduceMotion ? 0 : 0.5,
+        ease: [0.22, 1, 0.36, 1],
+      },
+    },
+  };
+
   return (
     <section
       id="product-preview"
       className="relative overflow-hidden bg-[#07090d] px-5 py-20 sm:px-6 sm:py-28 lg:px-8"
     >
-      {/* Background decoration */}
+      {/* Desktop-only background glow */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-1/2 h-[520px] w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-400/[0.07] blur-[140px]"
+        className="pointer-events-none absolute left-1/2 top-1/2 hidden h-[520px] w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-400/[0.07] blur-[140px] md:block"
       />
 
       <div className="relative mx-auto max-w-7xl">
         {/* Section heading */}
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{
+            opacity: 0,
+            y: reduceMotion ? 10 : 24,
+          }}
+          whileInView={{
+            opacity: 1,
+            y: 0,
+          }}
           viewport={{
             once: true,
-            amount: 0.5,
+            amount: reduceMotion ? 0.2 : 0.5,
           }}
           transition={{
-            duration: 0.6,
+            duration: reduceMotion ? 0.3 : 0.6,
             ease: [0.22, 1, 0.36, 1],
           }}
           className="mx-auto mb-12 max-w-2xl text-center"
@@ -142,53 +136,78 @@ function TaskFlowDashboardPreview() {
           </p>
         </motion.div>
 
-        {/* Animated dashboard */}
         <div
           className="relative mx-auto max-w-6xl"
-          style={{
-            perspective: "1400px",
-          }}
+          style={
+            allowDesktopMotion
+              ? {
+                  perspective: "1400px",
+                }
+              : undefined
+          }
         >
-          {/* Glow under dashboard */}
+          {/* Desktop-only glow under preview */}
+          {allowDesktopMotion && (
+            <motion.div
+              initial={{
+                opacity: 0,
+                scale: 0.8,
+              }}
+              whileInView={{
+                opacity: 1,
+                scale: 1,
+              }}
+              viewport={{
+                once: true,
+                amount: 0.2,
+              }}
+              transition={{
+                duration: 1.2,
+                delay: 0.25,
+                ease: "easeOut",
+              }}
+              className="absolute inset-x-20 -bottom-8 h-32 rounded-full bg-emerald-300/10 blur-3xl"
+            />
+          )}
+
+          {/* Whole dashboard reveal */}
           <motion.div
             initial={{
               opacity: 0,
-              scale: 0.8,
+              y: reduceMotion ? 18 : 80,
+              scale: reduceMotion ? 1 : 0.96,
+              rotateX: reduceMotion ? 0 : 8,
             }}
             whileInView={{
               opacity: 1,
+              y: 0,
               scale: 1,
+              rotateX: 0,
             }}
             viewport={{
               once: true,
-              amount: 0.2,
+              amount: reduceMotion ? 0.08 : 0.18,
             }}
             transition={{
-              duration: 1.2,
-              delay: 0.25,
-              ease: "easeOut",
+              duration: reduceMotion ? 0.35 : 0.9,
+              ease: [0.22, 1, 0.36, 1],
             }}
-            className="absolute inset-x-20 -bottom-8 h-32 rounded-full bg-emerald-300/10 blur-3xl"
-          />
-
-          <motion.div
-            variants={previewVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{
-              once: true,
-              amount: 0.18,
-              margin: "0px 0px -80px 0px",
-            }}
-            style={{
-              transformOrigin: "top center",
-              transformStyle: "preserve-3d",
-            }}
+            style={
+              allowDesktopMotion
+                ? {
+                    transformOrigin: "top center",
+                    transformStyle: "preserve-3d",
+                  }
+                : undefined
+            }
             className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0b0e14] shadow-[0_40px_130px_rgba(0,0,0,0.7)]"
           >
             {/* Browser toolbar */}
             <motion.div
               variants={childVariants}
+              initial={reduceMotion ? false : "hidden"}
+              whileInView={reduceMotion ? undefined : "visible"}
+              viewport={{ once: true }}
               className="flex h-12 items-center justify-between border-b border-white/10 bg-white/[0.025] px-4"
             >
               <div className="flex items-center gap-2">
@@ -208,6 +227,9 @@ function TaskFlowDashboardPreview() {
               {/* Sidebar */}
               <motion.aside
                 variants={childVariants}
+                initial={reduceMotion ? false : "hidden"}
+                whileInView={reduceMotion ? undefined : "visible"}
+                viewport={{ once: true }}
                 className="hidden border-r border-white/10 bg-black/10 p-4 md:block"
               >
                 <div className="mb-8 flex items-center gap-3 px-2">
@@ -241,7 +263,7 @@ function TaskFlowDashboardPreview() {
                         viewport={{ once: true }}
                         transition={{
                           duration: 0.35,
-                          delay: 0.45 + index * 0.07,
+                          delay: 0.4 + index * 0.06,
                         }}
                         className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm ${
                           item.active
@@ -264,11 +286,14 @@ function TaskFlowDashboardPreview() {
                 </div>
               </motion.aside>
 
-              {/* Dashboard content */}
+              {/* Main dashboard */}
               <div className="min-w-0 p-4 sm:p-6">
-                {/* Header */}
+                {/* Dashboard header */}
                 <motion.div
                   variants={childVariants}
+                  initial={reduceMotion ? false : "hidden"}
+                  whileInView={reduceMotion ? undefined : "visible"}
+                  viewport={{ once: true }}
                   className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"
                 >
                   <div>
@@ -282,6 +307,7 @@ function TaskFlowDashboardPreview() {
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
+                      aria-label="View notifications"
                       className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/[0.035] text-zinc-400"
                     >
                       <Bell className="h-4 w-4" />
@@ -297,27 +323,33 @@ function TaskFlowDashboardPreview() {
                   </div>
                 </motion.div>
 
-                {/* Stats cards */}
+                {/* Stats */}
                 <motion.div
                   variants={childVariants}
+                  initial={reduceMotion ? false : "hidden"}
+                  whileInView={reduceMotion ? undefined : "visible"}
+                  viewport={{ once: true }}
                   className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4"
                 >
                   <StatCard
                     label="Total tasks"
                     value="28"
                     change="+6 this week"
+                    allowMotion={allowDesktopMotion}
                   />
 
                   <StatCard
                     label="In progress"
                     value="12"
                     change="43% of total"
+                    allowMotion={allowDesktopMotion}
                   />
 
                   <StatCard
                     label="Completed"
                     value="19"
                     change="+14% this month"
+                    allowMotion={allowDesktopMotion}
                   />
 
                   <StatCard
@@ -325,13 +357,17 @@ function TaskFlowDashboardPreview() {
                     value="4"
                     change="Next 3 days"
                     warning
+                    allowMotion={allowDesktopMotion}
                   />
                 </motion.div>
 
                 <div className="mt-5 grid gap-4 xl:grid-cols-[1.35fr_0.65fr]">
-                  {/* Task table */}
+                  {/* Tasks */}
                   <motion.div
                     variants={childVariants}
+                    initial={reduceMotion ? false : "hidden"}
+                    whileInView={reduceMotion ? undefined : "visible"}
+                    viewport={{ once: true }}
                     className="min-w-0 rounded-xl border border-white/10 bg-white/[0.025]"
                   >
                     <div className="flex flex-col gap-3 border-b border-white/10 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -358,18 +394,26 @@ function TaskFlowDashboardPreview() {
                       {tasks.map((task, index) => (
                         <motion.div
                           key={task.title}
-                          initial={{
-                            opacity: 0,
-                            x: -18,
-                          }}
-                          whileInView={{
-                            opacity: 1,
-                            x: 0,
-                          }}
+                          initial={
+                            reduceMotion
+                              ? false
+                              : {
+                                  opacity: 0,
+                                  x: -18,
+                                }
+                          }
+                          whileInView={
+                            reduceMotion
+                              ? undefined
+                              : {
+                                  opacity: 1,
+                                  x: 0,
+                                }
+                          }
                           viewport={{ once: true }}
                           transition={{
                             duration: 0.4,
-                            delay: 0.65 + index * 0.08,
+                            delay: 0.55 + index * 0.07,
                             ease: [0.22, 1, 0.36, 1],
                           }}
                         >
@@ -379,9 +423,12 @@ function TaskFlowDashboardPreview() {
                     </div>
                   </motion.div>
 
-                  {/* Progress card */}
+                  {/* Progress */}
                   <motion.div
                     variants={childVariants}
+                    initial={reduceMotion ? false : "hidden"}
+                    whileInView={reduceMotion ? undefined : "visible"}
+                    viewport={{ once: true }}
                     className="rounded-xl border border-white/10 bg-white/[0.025] p-4"
                   >
                     <div className="flex items-center justify-between">
@@ -395,31 +442,50 @@ function TaskFlowDashboardPreview() {
                         </p>
                       </div>
 
-                      <button type="button" className="text-zinc-600">
+                      <button
+                        type="button"
+                        aria-label="Open progress options"
+                        className="text-zinc-600"
+                      >
                         <MoreHorizontal className="h-4 w-4" />
                       </button>
                     </div>
 
-                    {/* Animated chart */}
+                    {/* Chart */}
                     <div className="mt-8 flex h-32 items-end gap-2">
                       {chartBars.map((height, index) => (
                         <div
-                          key={index}
+                          key={`${height}-${index}`}
                           className="flex h-full flex-1 items-end rounded-md bg-white/[0.025]"
                         >
                           <motion.div
-                            initial={{
-                              height: 0,
-                              opacity: 0,
-                            }}
-                            whileInView={{
-                              height: `${height}%`,
-                              opacity: 1,
-                            }}
+                            initial={
+                              reduceMotion
+                                ? false
+                                : {
+                                    height: 0,
+                                    opacity: 0,
+                                  }
+                            }
+                            whileInView={
+                              reduceMotion
+                                ? undefined
+                                : {
+                                    height: `${height}%`,
+                                    opacity: 1,
+                                  }
+                            }
+                            style={
+                              reduceMotion
+                                ? {
+                                    height: `${height}%`,
+                                  }
+                                : undefined
+                            }
                             viewport={{ once: true }}
                             transition={{
                               duration: 0.7,
-                              delay: 0.8 + index * 0.07,
+                              delay: 0.75 + index * 0.07,
                               ease: [0.22, 1, 0.36, 1],
                             }}
                             className="w-full rounded-md bg-gradient-to-t from-emerald-500/30 to-emerald-300"
@@ -438,7 +504,7 @@ function TaskFlowDashboardPreview() {
                       <span>Sun</span>
                     </div>
 
-                    {/* Progress bar */}
+                    {/* Completion progress */}
                     <div className="mt-7">
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-zinc-500">
@@ -452,12 +518,31 @@ function TaskFlowDashboardPreview() {
 
                       <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/5">
                         <motion.div
-                          initial={{ width: 0 }}
-                          whileInView={{ width: "78%" }}
+                          initial={
+                            reduceMotion
+                              ? false
+                              : {
+                                  width: 0,
+                                }
+                          }
+                          whileInView={
+                            reduceMotion
+                              ? undefined
+                              : {
+                                  width: "78%",
+                                }
+                          }
+                          style={
+                            reduceMotion
+                              ? {
+                                  width: "78%",
+                                }
+                              : undefined
+                          }
                           viewport={{ once: true }}
                           transition={{
-                            duration: 1.1,
-                            delay: 0.95,
+                            duration: 1,
+                            delay: 0.9,
                             ease: [0.22, 1, 0.36, 1],
                           }}
                           className="h-full rounded-full bg-emerald-300"
@@ -467,14 +552,22 @@ function TaskFlowDashboardPreview() {
 
                     {/* Completion summary */}
                     <motion.div
-                      initial={{
-                        opacity: 0,
-                        y: 12,
-                      }}
-                      whileInView={{
-                        opacity: 1,
-                        y: 0,
-                      }}
+                      initial={
+                        reduceMotion
+                          ? false
+                          : {
+                              opacity: 0,
+                              y: 12,
+                            }
+                      }
+                      whileInView={
+                        reduceMotion
+                          ? undefined
+                          : {
+                              opacity: 1,
+                              y: 0,
+                            }
+                      }
                       viewport={{ once: true }}
                       transition={{
                         delay: 1.05,
@@ -507,12 +600,16 @@ function TaskFlowDashboardPreview() {
   );
 }
 
-function StatCard({ label, value, change, warning = false }) {
+function StatCard({ label, value, change, warning = false, allowMotion }) {
   return (
     <motion.div
-      whileHover={{
-        y: -4,
-      }}
+      whileHover={
+        allowMotion
+          ? {
+              y: -4,
+            }
+          : undefined
+      }
       transition={{
         type: "spring",
         stiffness: 300,
@@ -551,7 +648,7 @@ function TaskRow({ task }) {
   };
 
   return (
-    <div className="grid grid-cols-[1fr_auto] items-center gap-4 p-4 transition-colors hover:bg-white/[0.02]">
+    <div className="grid grid-cols-[1fr_auto] items-center gap-4 p-4 transition-colors md:hover:bg-white/[0.02]">
       <div className="flex min-w-0 items-center gap-3">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-[10px] font-medium text-zinc-300">
           {task.assignee}
@@ -566,7 +663,9 @@ function TaskRow({ task }) {
             <span className="text-[11px] text-zinc-600">{task.category}</span>
 
             <span
-              className={`rounded-full px-2 py-0.5 text-[10px] ${statusClasses[task.status]}`}
+              className={`rounded-full px-2 py-0.5 text-[10px] ${
+                statusClasses[task.status]
+              }`}
             >
               {task.status}
             </span>
