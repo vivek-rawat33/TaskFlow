@@ -10,6 +10,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#07090d] font-sans text-white selection:bg-emerald-300 selection:text-zinc-950">
       <LandingNavbar />
+
       <main>
         <LandingHero />
         <LandingFeatures />
@@ -17,6 +18,7 @@ export default function LandingPage() {
         <LandingPermissions />
         <LandingCta />
       </main>
+
       <LandingFooter />
     </div>
   );

@@ -9,6 +9,21 @@ import {
   UsersRound,
 } from "lucide-react";
 
+export const landingNavigation = [
+  {
+    label: "Features",
+    href: "#features",
+  },
+  {
+    label: "Workflow",
+    href: "#workflow",
+  },
+  {
+    label: "Roles",
+    href: "#permissions",
+  },
+];
+
 export const landingConfig = {
   brand: {
     name: "TaskFlow",
@@ -103,7 +118,8 @@ export const landingConfig = {
   roles: [
     {
       name: "Owner",
-      description: "Controls the workspace, members, permissions, and critical team actions.",
+      description:
+        "Controls the workspace, members, permissions, and critical team actions.",
       badge: "Full control",
     },
     {
@@ -113,12 +129,14 @@ export const landingConfig = {
     },
     {
       name: "Member",
-      description: "Creates, updates, and completes work assigned across the team.",
+      description:
+        "Creates, updates, and completes work assigned across the team.",
       badge: "Active contributor",
     },
     {
       name: "Viewer",
-      description: "Follows project progress without changing operational data.",
+      description:
+        "Follows project progress without changing operational data.",
       badge: "Read access",
     },
   ],
