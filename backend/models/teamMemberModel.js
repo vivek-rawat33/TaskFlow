@@ -30,6 +30,7 @@ teamMemberSchema.index(
     name: "Membership_by_user",
   },
 );
+
 teamMemberSchema.index(
   { teamId: 1, userId: 1 },
   { unique: true },
