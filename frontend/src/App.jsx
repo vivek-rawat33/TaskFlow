@@ -3,6 +3,7 @@ import LoginPage from "./pages/Login-page.jsx";
 import SignupPage from "./pages/Signup-page.jsx";
 import Page from "./pages/Dashboard.jsx";
 import LandingPage from "./pages/LandingPage";
+import TermsAndPrivacy from "./pages/TermsAndPrivacy";
 function App() {
   return (
     <Routes>
@@ -11,6 +12,7 @@ function App() {
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/signin" element={<LoginPage />} />
       <Route path="/dashboard" element={<Page />} />
+      <Route path="/terms-and-privacy" element={<TermsAndPrivacy />} />
 
       <Route path="/dashboard/:teamId/*" element={<Page />} />
 

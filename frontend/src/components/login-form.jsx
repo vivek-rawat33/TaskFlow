@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import signupImage from "@/assets/signup-image.png";
+import { Link } from "react-router-dom";
 import {
   Field,
   FieldDescription,
@@ -67,7 +68,7 @@ export function LoginForm({ className, ...props }) {
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">Welcome back</h1>
                 <p className="text-balance text-muted-foreground">
-                  Login to your Acme Inc account
+                  Login to your TaskFlow account
                 </p>
               </div>
               <Field>
@@ -150,10 +151,16 @@ export function LoginForm({ className, ...props }) {
           </div>
         </CardContent>
       </Card>
-      <FieldDescription className="px-6 text-center">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
-      </FieldDescription>
+      <p className="mt-5 text-center text-xs leading-5 text-zinc-500">
+        By creating an account, you agree to TaskFlow&apos;s{" "}
+        <Link
+          to="/terms-and-privacy"
+          className="font-medium text-emerald-300 underline-offset-4 hover:underline"
+        >
+          Terms of Service and Privacy Policy
+        </Link>
+        .
+      </p>
     </div>
   );
 }

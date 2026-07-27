@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { LabelDemo } from "./Label";
 import signupImage from "@/assets/signup-image.png";
+
 import {
   Field,
   FieldDescription,
@@ -191,10 +192,16 @@ export function SignupForm({ className, ...props }) {
           </div>
         </CardContent>
       </Card>
-      <FieldDescription className="px-6 text-center ">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
-      </FieldDescription>
+      <p className="mt-5 text-center text-xs text-zinc-600">
+        By continuing, you acknowledge TaskFlow&apos;s{" "}
+        <Link
+          to="/terms-and-privacy"
+          className="text-zinc-400 underline-offset-4 hover:text-emerald-300 hover:underline"
+        >
+          Terms and Privacy Policy
+        </Link>
+        .
+      </p>
     </div>
   );
 }
