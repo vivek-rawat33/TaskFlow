@@ -151,16 +151,17 @@ export function LoginForm({ className, ...props }) {
           </div>
         </CardContent>
       </Card>
-      <p className="mt-5 text-center text-xs leading-5 text-zinc-500">
-        By creating an account, you agree to TaskFlow&apos;s{" "}
+
+      <span className="mt-5 text-center text-xs text-zinc-600">
+        By continuing, you acknowledge TaskFlow&apos;s{" "}
         <Link
           to="/terms-and-privacy"
-          className="font-medium text-emerald-300 underline-offset-4 hover:underline"
+          className="text-zinc-400 underline-offset-4 hover:text-emerald-300 hover:underline"
         >
-          Terms of Service and Privacy Policy
+          Terms and Privacy Policy
         </Link>
         .
-      </p>
+      </span>
     </div>
   );
 }

@@ -1,7 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { LabelDemo } from "./Label";
 import signupImage from "@/assets/signup-image.png";
 
 import {
@@ -171,15 +170,12 @@ export function SignupForm({ className, ...props }) {
                 </Button>
               </Field>
               <FieldDescription className="text-center">
-                <div className="text-sm text-balance text-muted-foreground flex flex-col items-center text-center mb-1">
-                  <LabelDemo />
-                </div>
-                <p className="text-sm text-muted-foreground">
+                <span className="text-sm text-muted-foreground">
                   Already have an account?{" "}
                   <Link to="/signin" className="underline underline-offset-4">
                     Sign in
                   </Link>
-                </p>
+                </span>
               </FieldDescription>
             </FieldGroup>
           </form>
@@ -192,13 +188,13 @@ export function SignupForm({ className, ...props }) {
           </div>
         </CardContent>
       </Card>
-      <p className="mt-5 text-center text-xs text-zinc-600">
-        By continuing, you acknowledge TaskFlow&apos;s{" "}
+      <p className="mt-5 text-center text-xs leading-5 text-zinc-500">
+        By creating an account, you agree to TaskFlow&apos;s{" "}
         <Link
           to="/terms-and-privacy"
-          className="text-zinc-400 underline-offset-4 hover:text-emerald-300 hover:underline"
+          className="font-medium text-emerald-300 underline-offset-4 hover:underline"
         >
-          Terms and Privacy Policy
+          Terms of Service and Privacy Policy
         </Link>
         .
       </p>
