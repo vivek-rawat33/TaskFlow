@@ -208,7 +208,7 @@ export default function LandingPermissions() {
                 }`}
               >
                 {isRecommended && (
-                  <div className="absolute right-4 top-4 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-emerald-200">
+                  <div className="absolute right-4 top-10 mt-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-emerald-200">
                     Recommended
                   </div>
                 )}
