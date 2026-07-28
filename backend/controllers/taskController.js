@@ -165,7 +165,7 @@ export const updateTask = async (req, res, next) => {
         message: "Due date cannot be in the past",
       });
     }
-    
+
     if (!isValid) {
       return res.status(400).json({
         message: "Validation failed",

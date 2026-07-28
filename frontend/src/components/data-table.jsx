@@ -56,6 +56,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -453,6 +454,7 @@ function DraggableRow({ row }) {
 
 const emptyTask = {
   header: "",
+  description: "",
   type: "Frontend",
   status: "Todo",
   target: "",
@@ -499,6 +501,7 @@ function formatTaskForTable(task) {
   return {
     id: task._id || task.id,
     header: task.title || "Untitled Task",
+    description: task.description || "",
     type: task.category || "General",
     status: toFrontendStatus(task.status),
     target: task.dueDate ? task.dueDate.split("T")[0] : "",
@@ -680,7 +683,7 @@ export function DataTable({
     try {
       const taskPayload = {
         title: taskTitle,
-        description: "",
+        description: newTask.description?.trim() || "",
         category: newTask.type,
         status: toBackendStatus(newTask.status),
         priority: toBackendPriority(newTask.limit),
@@ -745,7 +748,6 @@ export function DataTable({
       toast.error("Team ID missing");
       return;
     }
-
     const previousData = data;
 
     const currentTask = data.find((task) => String(task.id) === String(taskId));
@@ -772,7 +774,6 @@ export function DataTable({
         : "Unassigned",
     };
 
-    // immediately update frontend
     setData((currentData) =>
       currentData.map((task) =>
         String(task.id) === String(taskId) ? updatedUiTask : task,
@@ -780,25 +781,29 @@ export function DataTable({
     );
 
     try {
-      const payload = {
-        title: mergedTask.header,
-        description: mergedTask.description || "",
-        category: mergedTask.type,
-        status: toBackendStatus(mergedTask.status),
-        priority: toBackendPriority(mergedTask.limit),
-        dueDate: mergedTask.target || null,
-        assignedTo: mergedTask.assignedToId || null,
-      };
+      // ONLY SEND FIELDS THAT CHANGED
+      const payload = {};
+
+      if (updatedTask.header !== undefined) payload.title = mergedTask.header;
+      if (updatedTask.description !== undefined)
+        payload.description = mergedTask.description || "";
+      if (updatedTask.type !== undefined) payload.category = mergedTask.type;
+      if (updatedTask.status !== undefined)
+        payload.status = toBackendStatus(mergedTask.status);
+      if (updatedTask.limit !== undefined)
+        payload.priority = toBackendPriority(mergedTask.limit);
+      if (updatedTask.target !== undefined)
+        payload.dueDate = mergedTask.target || null;
+      if (updatedTask.assignedToId !== undefined)
+        payload.assignedTo = mergedTask.assignedToId || null;
+
       await updateTeamTask(teamId, taskId, payload);
       await refreshParentTasks();
 
       toast.success("Task updated successfully");
     } catch (error) {
       console.error("Update task failed:", error);
-
-      // rollback if backend fails
       setData(previousData);
-
       toast.error(error.response?.data?.message || "Failed to update task");
     }
   }
@@ -947,6 +952,23 @@ export function DataTable({
                           }))
                         }
                         placeholder="Example: Build dashboard layout"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-3">
+                      <Label htmlFor="new-task-description">Description</Label>
+                      <Textarea
+                        id="new-task-description"
+                        value={newTask.description}
+                        onChange={(e) =>
+                          setNewTask((prev) => ({
+                            ...prev,
+                            description: e.target.value,
+                          }))
+                        }
+                        placeholder="Add more details about this task..."
+                        rows={3}
+                        className="resize-none"
                       />
                     </div>
 
@@ -1146,6 +1168,25 @@ export function DataTable({
                           }))
                         }
                         placeholder="Example: Build dashboard layout"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="new-task-description-desktop">
+                        Description
+                      </Label>
+                      <Textarea
+                        id="new-task-description-desktop"
+                        value={newTask.description}
+                        onChange={(e) =>
+                          setNewTask((prev) => ({
+                            ...prev,
+                            description: e.target.value,
+                          }))
+                        }
+                        placeholder="Add more details about this task..."
+                        rows={3}
+                        className="resize-none"
                       />
                     </div>
 
@@ -1515,6 +1556,7 @@ function TableCellViewer({
   const canUpdateOnlyStatus = canMemberUpdateStatus && !canManageTasks;
   const [formData, setFormData] = React.useState({
     header: item.header,
+    description: item.description || "",
     type: item.type,
     status: item.status,
     target: item.target,
@@ -1526,6 +1568,7 @@ function TableCellViewer({
   React.useEffect(() => {
     setFormData({
       header: item.header,
+      description: item.description || "",
       type: item.type,
       status: item.status,
       target: item.target,
@@ -1654,6 +1697,24 @@ function TableCellViewer({
                   header: e.target.value,
                 }))
               }
+            />
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <Label htmlFor={`${item.id}-description`}>Description</Label>
+            <Textarea
+              id={`${item.id}-description`}
+              value={formData.description}
+              disabled={!canEditFullTask}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
+              placeholder="Add more details about this task..."
+              rows={3}
+              className="resize-none"
             />
           </div>
 
