@@ -3,7 +3,6 @@ import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
 import { DataTable } from "@/components/data-table";
-// import { SectionCards } from "@/components/section-cards";
 import { DeadlineChart } from "@/components/deadline-chart";
 import { MemberPerformanceChart } from "@/components/member-performance-chart";
 import { PriorityChart } from "@/components/priority-chart";
@@ -52,16 +51,6 @@ import {
   createTeamAnnouncement,
   deleteTeamAnnouncement,
 } from "@/api/announcementApi";
-
-function formatDate(date) {
-  if (!date) return "";
-
-  return new Date(date).toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
 
 function normalizeTeam(item) {
   const team = item.team || item.teamId || item;

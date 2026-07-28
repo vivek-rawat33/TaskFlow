@@ -33,6 +33,7 @@ const isPastDate = (date) => {
 
   return inputDate < today;
 };
+
 export const getTasks = async (req, res, next) => {
   try {
     const { status, priority, search } = req.query;
@@ -164,6 +165,7 @@ export const updateTask = async (req, res, next) => {
         message: "Due date cannot be in the past",
       });
     }
+    
     if (!isValid) {
       return res.status(400).json({
         message: "Validation failed",

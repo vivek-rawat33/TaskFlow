@@ -1,12 +1,16 @@
 import axios from "axios";
 
+
+//globally header ko content-type set krdo
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   headers: {
     "Content-Type": "application/json",
   },
 });
+ 
 
+//automaticall header pass 
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
 
