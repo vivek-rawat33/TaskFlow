@@ -1691,6 +1691,7 @@ function TableCellViewer({
             <Input
               id={`${item.id}-header`}
               value={formData.header}
+              disabled={!canEditFullTask}
               onChange={(e) =>
                 setFormData((prev) => ({
                   ...prev,
