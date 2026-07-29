@@ -30,6 +30,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 
+import { DatePicker } from "./ui/date-picker";
 import { z } from "zod";
 
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -1017,6 +1018,27 @@ export function DataTable({
                               <SelectItem value="Feature">Feature</SelectItem>
                               <SelectItem value="Bug Fix">Bug Fix</SelectItem>
                               <SelectItem value="Planning">Planning</SelectItem>
+                              <SelectItem value="Research">Research</SelectItem>
+                              <SelectItem value="Technical content">
+                                Technical content
+                              </SelectItem>
+                              <SelectItem value="Narrative">
+                                Narrative
+                              </SelectItem>
+                              <SelectItem value="Legal">Legal</SelectItem>
+                              <SelectItem value="Visual">Visual</SelectItem>
+                              <SelectItem value="Financial">
+                                Financial
+                              </SelectItem>
+                              <SelectItem value="Cover page">
+                                Cover page
+                              </SelectItem>
+                              <SelectItem value="Table of contents">
+                                Table of contents
+                              </SelectItem>
+                              <SelectItem value="Plain language">
+                                Plain language
+                              </SelectItem>
                             </SelectGroup>
                           </SelectContent>
                         </Select>
@@ -1055,34 +1077,17 @@ export function DataTable({
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div className="flex flex-col gap-3">
-                        <Label htmlFor="new-task-deadline">Deadline</Label>
-                        <div className="relative">
-                          <Input
-                            ref={newTaskDeadlineInputRef}
-                            id="new-task-deadline"
-                            type="date"
-                            min={getTodayDateInputValue()}
-                            value={newTask.target}
-                            onChange={(e) =>
-                              setNewTask((prev) => ({
-                                ...prev,
-                                target: e.target.value,
-                              }))
-                            }
-                            className="pr-10 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-                          />
+                        <Label>Deadline</Label>
 
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={openNewTaskDeadlinePicker}
-                            className="absolute inset-y-1 right-1 my-auto size-8 text-muted-foreground transition-colors duration-150 hover:bg-muted/50 hover:text-foreground active:bg-muted/60 active:translate-y-0"
-                          >
-                            <CalendarIcon className="size-4" />
-                            <span className="sr-only">Open calendar</span>
-                          </Button>
-                        </div>
+                        <DatePicker
+                          value={newTask.target}
+                          onChange={(value) =>
+                            setNewTask((prev) => ({
+                              ...prev,
+                              target: value,
+                            }))
+                          }
+                        />
                       </div>
 
                       <div className="flex flex-col gap-3">
@@ -1252,6 +1257,27 @@ export function DataTable({
                               <SelectItem value="Feature">Feature</SelectItem>
                               <SelectItem value="Bug Fix">Bug Fix</SelectItem>
                               <SelectItem value="Planning">Planning</SelectItem>
+                              <SelectItem value="Research">Research</SelectItem>
+                              <SelectItem value="Technical content">
+                                Technical content
+                              </SelectItem>
+                              <SelectItem value="Narrative">
+                                Narrative
+                              </SelectItem>
+                              <SelectItem value="Legal">Legal</SelectItem>
+                              <SelectItem value="Visual">Visual</SelectItem>
+                              <SelectItem value="Financial">
+                                Financial
+                              </SelectItem>
+                              <SelectItem value="Cover page">
+                                Cover page
+                              </SelectItem>
+                              <SelectItem value="Table of contents">
+                                Table of contents
+                              </SelectItem>
+                              <SelectItem value="Plain language">
+                                Plain language
+                              </SelectItem>
                             </SelectGroup>
                           </SelectContent>
                         </Select>
@@ -1293,33 +1319,16 @@ export function DataTable({
                         <Label htmlFor="new-task-deadline-desktop">
                           Deadline
                         </Label>
-                        <div className="relative">
-                          <Input
-                            ref={newTaskDeadlineInputRef}
-                            id="new-task-deadline-desktop"
-                            type="date"
-                            min={getTodayDateInputValue()}
-                            value={newTask.target}
-                            onChange={(e) =>
-                              setNewTask((prev) => ({
-                                ...prev,
-                                target: e.target.value,
-                              }))
-                            }
-                            className="pr-10 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-                          />
 
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={openNewTaskDeadlinePicker}
-                            className="absolute inset-y-1 right-1 my-auto size-8 text-muted-foreground transition-colors duration-150 hover:bg-muted/50 hover:text-foreground active:bg-muted/60 active:translate-y-0"
-                          >
-                            <CalendarIcon className="size-4" />
-                            <span className="sr-only">Open calendar</span>
-                          </Button>
-                        </div>
+                        <DatePicker
+                          value={newTask.target}
+                          onChange={(value) =>
+                            setNewTask((prev) => ({
+                              ...prev,
+                              target: value,
+                            }))
+                          }
+                        />
                       </div>
 
                       <div className="flex flex-col gap-2">
@@ -1625,22 +1634,6 @@ function TableCellViewer({
     });
   }, [item]);
 
-  const deadlineInputRef = React.useRef(null);
-
-  function openDeadlinePicker() {
-    const input = deadlineInputRef.current;
-
-    if (!input || !canEditFullTask) return;
-
-    if (typeof input.showPicker === "function") {
-      input.showPicker();
-      return;
-    }
-
-    input.focus();
-    input.click();
-  }
-
   function handleSaveChanges(e) {
     e.preventDefault();
 
@@ -1842,36 +1835,17 @@ function TableCellViewer({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-3">
-              <Label htmlFor={`${item.id}-target`}>Deadline</Label>
-              <div className="relative">
-                <Input
-                  ref={deadlineInputRef}
-                  id={`${item.id}-target`}
-                  type="date"
-                  min={getTodayDateInputValue()}
-                  value={formData.target || ""}
-                  disabled={!canEditFullTask}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      target: e.target.value,
-                    }))
-                  }
-                  className="pr-10 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-                />
+              <Label>Deadline</Label>
 
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  disabled={!canEditFullTask}
-                  onClick={openDeadlinePicker}
-                  className="absolute inset-y-1 right-1 my-auto size-8 text-muted-foreground transition-colors duration-150 hover:bg-muted/50 hover:text-foreground active:bg-muted/60 active:translate-y-0"
-                >
-                  <CalendarIcon className="size-4" />
-                  <span className="sr-only">Open calendar</span>
-                </Button>
-              </div>
+              <DatePicker
+                value={formData.target}
+                onChange={(value) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    target: value,
+                  }))
+                }
+              />
             </div>
 
             <div className="flex flex-col gap-3">
