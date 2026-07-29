@@ -40,10 +40,10 @@ import {
   UsersIcon,
   BellIcon,
   CalendarDaysIcon,
-  Settings2Icon,
-  CircleHelpIcon,
-  SearchIcon,
-  ClipboardListIcon,
+  // Settings2Icon,
+  // CircleHelpIcon,
+  // SearchIcon,
+  // ClipboardListIcon,
   ClockIcon,
   CommandIcon,
   CirclePlusIcon,
@@ -86,29 +86,29 @@ const data = {
   ],
 
   navSecondary: [
-    {
-      title: "Settings",
-      url: "/settings",
-      icon: <Settings2Icon />,
-    },
-    {
-      title: "Get Help",
-      url: "/help",
-      icon: <CircleHelpIcon />,
-    },
-    {
-      title: "Search",
-      url: "/search",
-      icon: <SearchIcon />,
-    },
+    // {
+    //   title: "Settings",
+    //   url: "/settings",
+    //   icon: <Settings2Icon />,
+    // },
+    // {
+    //   title: "Get Help",
+    //   url: "/help",
+    //   icon: <CircleHelpIcon />,
+    // },
+    // {
+    //   title: "Search",
+    //   url: "/search",
+    //   icon: <SearchIcon />,
+    // },
   ],
 
   documents: [
-    {
-      name: "Project Tasks",
-      url: "/tasks",
-      icon: <ClipboardListIcon />,
-    },
+    // {
+    //   name: "Project Tasks",
+    //   url: "/tasks",
+    //   icon: <ClipboardListIcon />,
+    // },
     {
       name: "Deadlines",
       url: "/deadlines",

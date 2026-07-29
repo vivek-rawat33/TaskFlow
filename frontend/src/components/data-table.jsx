@@ -1787,7 +1787,6 @@ function TableCellViewer({
                     <SelectItem value="Todo">Todo</SelectItem>
                     <SelectItem value="In Process">In Process</SelectItem>
                     <SelectItem value="Done">Done</SelectItem>
-                    <SelectItem value="Not Started">Not Started</SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>

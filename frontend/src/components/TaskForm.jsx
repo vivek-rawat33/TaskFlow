@@ -189,8 +189,8 @@ function TaskForm({ editingTask, onSubmit, onCancel, isSubmitting }) {
           {isSubmitting
             ? "Saving..."
             : editingTask
-            ? "Save Changes"
-            : "Add Task"}
+              ? "Save Changes"
+              : "Add Task"}
         </button>
 
         {editingTask && (
