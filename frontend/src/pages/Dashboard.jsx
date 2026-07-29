@@ -18,7 +18,6 @@ import {
   updateTeam,
   deleteTeam,
 } from "@/api/teamApi";
-import { toast } from "sonner";
 
 import { StatusChart } from "@/components/status-chart";
 
@@ -51,6 +50,7 @@ import {
   createTeamAnnouncement,
   deleteTeamAnnouncement,
 } from "@/api/announcementApi";
+import { notify } from "@/components/ui/toast";
 
 function normalizeTeam(item) {
   const team = item.team || item.teamId || item;
@@ -191,7 +191,7 @@ export default function Dashboard() {
         setTasks(formattedTasks);
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
-        toast.error("Failed to load dashboard data");
+        notify.error("Failed to load dashboard data");
       } finally {
         if (!silent) {
           setLoading(false);
@@ -363,7 +363,7 @@ function TeamMembersSection({
     const email = memberForm.email.trim();
 
     if (!email) {
-      toast.error("Email is required");
+      notify.error("Email is required");
       return;
     }
 
@@ -392,7 +392,7 @@ function TeamMembersSection({
       });
 
       setIsAddMemberOpen(false);
-      toast.success("Member added successfully");
+      notify.success("Member added successfully");
     } catch (error) {
       console.error("Add member failed:", error);
 
@@ -400,28 +400,28 @@ function TeamMembersSection({
       const message = error.response?.data?.message;
 
       if (status === 404) {
-        toast.error("User not found. Ask this user to sign up first.");
+        notify.error("User not found. Ask this user to sign up first.");
         return;
       }
 
       if (status === 409 || message?.toLowerCase().includes("already")) {
-        toast.error("This user is already a member of this team.");
+        notify.error("This user is already a member of this team.");
         return;
       }
 
       if (status === 403) {
-        toast.error("You do not have permission to add members.");
+        notify.error("You do not have permission to add members.");
         return;
       }
 
       if (status === 401) {
-        toast.error("Please sign in again.");
+        notify.error("Please sign in again.");
         localStorage.removeItem("token");
         window.location.href = "/signin";
         return;
       }
 
-      toast.error(message || "Failed to add member");
+      notify.error(message || "Failed to add member");
     }
   }
   async function handleRemoveMember(member) {
@@ -436,24 +436,24 @@ function TeamMembersSection({
 
       onMemberRemoved?.(member.id);
 
-      toast.success("Member removed successfully");
+      notify.success("Member removed successfully");
     } catch (error) {
       console.error("Remove member failed:", error);
 
       const message = error.response?.data?.message;
 
-      toast.error(message || "Failed to remove member");
+      notify.error(message || "Failed to remove member");
     }
   }
 
   async function handleChangeMemberRole(member, newRole) {
     if (!teamId) {
-      toast.error("Team ID missing");
+      notify.error("Team ID missing");
       return;
     }
 
     if (member.role === "owner") {
-      toast.error("Owner role cannot be changed");
+      notify.error("Owner role cannot be changed");
       return;
     }
 
@@ -462,9 +462,9 @@ function TeamMembersSection({
 
       onMemberRoleChanged?.(member.id, newRole);
 
-      toast.success("Role updated successfully");
+      notify.success("Role updated successfully");
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to change role");
+      notify.error(error.response?.data?.message || "Failed to change role");
     }
   }
   return (
@@ -691,7 +691,7 @@ function AnnouncementsSection({ teamId, currentUserRole = "" }) {
         setAnnouncements(res.announcements || []);
       } catch (error) {
         console.error("Fetch announcements failed:", error);
-        toast.error(
+        notify.error(
           error.response?.data?.message || "Failed to fetch announcements",
         );
       } finally {
@@ -709,12 +709,12 @@ function AnnouncementsSection({ teamId, currentUserRole = "" }) {
     const message = announcementForm.message.trim();
 
     if (!title) {
-      toast.error("Announcement title is required");
+      notify.error("Announcement title is required");
       return;
     }
 
     if (!message) {
-      toast.error("Announcement message is required");
+      notify.error("Announcement message is required");
       return;
     }
 
@@ -735,10 +735,10 @@ function AnnouncementsSection({ teamId, currentUserRole = "" }) {
 
       setIsCreateOpen(false);
 
-      toast.success("Announcement posted successfully");
+      notify.success("Announcement posted successfully");
     } catch (error) {
       console.error("Create announcement failed:", error);
-      toast.error(
+      notify.error(
         error.response?.data?.message || "Failed to create announcement",
       );
     } finally {
@@ -759,10 +759,10 @@ function AnnouncementsSection({ teamId, currentUserRole = "" }) {
         ),
       );
 
-      toast.success("Announcement deleted successfully");
+      notify.success("Announcement deleted successfully");
     } catch (error) {
       console.error("Delete announcement failed:", error);
-      toast.error(
+      notify.error(
         error.response?.data?.message || "Failed to delete announcement",
       );
     }
@@ -937,7 +937,7 @@ function TeamSettingsSection({
     const description = teamForm.description.trim();
 
     if (!name) {
-      toast.error("Team name is required");
+      notify.error("Team name is required");
       return;
     }
 
@@ -951,10 +951,10 @@ function TeamSettingsSection({
 
       onTeamUpdated?.(res.team);
 
-      toast.success("Team updated successfully");
+      notify.success("Team updated successfully");
     } catch (error) {
       console.error("Update team failed:", error);
-      toast.error(error.response?.data?.message || "Failed to update team");
+      notify.error(error.response?.data?.message || "Failed to update team");
     } finally {
       setIsSaving(false);
     }
@@ -972,12 +972,12 @@ function TeamSettingsSection({
 
       await deleteTeam(teamId);
 
-      toast.success("Team deleted successfully");
+      notify.success("Team deleted successfully");
 
       onTeamDeleted?.();
     } catch (error) {
       console.error("Delete team failed:", error);
-      toast.error(error.response?.data?.message || "Failed to delete team");
+      notify.error(error.response?.data?.message || "Failed to delete team");
     } finally {
       setIsDeleting(false);
     }

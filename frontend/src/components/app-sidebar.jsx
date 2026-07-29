@@ -4,8 +4,7 @@ import { NavSecondary } from "@/components/nav-secondary";
 import { NavUser } from "@/components/nav-user";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { toast } from "sonner";
-
+import { notify } from "./ui/toast";
 import {
   Dialog,
   DialogContent,
@@ -147,7 +146,7 @@ export function AppSidebar({ ...props }) {
         setTeams(formattedTeams);
       } catch (error) {
         console.error("Failed to fetch teams:", error);
-        toast.error("Failed to fetch teams");
+        notify.error("Failed to fetch teams");
       }
     }
 
@@ -160,7 +159,7 @@ export function AppSidebar({ ...props }) {
     const name = teamForm.name.trim();
 
     if (!name) {
-      toast.error("Team name is required");
+      notify.error("Team name is required");
       return;
     }
 
@@ -180,18 +179,18 @@ export function AppSidebar({ ...props }) {
 
       setIsCreateTeamOpen(false);
 
-      toast.success("Team created successfully");
+      notify.success("Team created successfully");
 
       if (!team.id) {
         console.error("Created team has no id:", createdTeam);
-        toast.error("Team created but team id missing");
+        notify.error("Team created but team id missing");
         return;
       }
 
       navigate(`/dashboard/${team.id}`);
     } catch (error) {
       console.error("Create team failed:", error);
-      toast.error(error.response?.data?.message || "Failed to create team");
+      notify.error(error.response?.data?.message || "Failed to create team");
     }
   }
 

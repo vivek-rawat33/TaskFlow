@@ -29,7 +29,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { toast } from "sonner";
+
 import { z } from "zod";
 
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -110,6 +110,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { notify } from "./ui/toast";
 
 function DragHandle({ id }) {
   const { attributes, listeners } = useSortable({
@@ -687,12 +688,12 @@ export function DataTable({
     const taskTitle = newTask.header.trim();
 
     if (!taskTitle) {
-      toast.error("Task title is required");
+      notify.error("Task title is required");
       return;
     }
 
     if (!teamId) {
-      toast.error("Team ID missing");
+      notify.error("Team ID missing");
       return;
     }
 
@@ -727,15 +728,15 @@ export function DataTable({
       setView("all");
       setPagination((prev) => ({ ...prev, pageIndex: 0 }));
 
-      toast.success("Task created successfully");
+      notify.success("Task created successfully");
     } catch (error) {
       console.error("Create task failed:", error);
-      toast.error(error.response?.data?.message || "Failed to create task");
+      notify.error(error.response?.data?.message || "Failed to create task");
     }
   }
   async function deleteTask(taskId) {
     if (!teamId) {
-      toast.error("Team ID missing");
+      notify.error("Team ID missing");
       return;
     }
 
@@ -746,10 +747,10 @@ export function DataTable({
         currentData.filter((task) => String(task.id) !== String(taskId)),
       );
 
-      toast.success("Task deleted successfully");
+      notify.success("Task deleted successfully");
     } catch (error) {
       console.error("Delete task failed:", error);
-      toast.error(error.response?.data?.message || "Failed to delete task");
+      notify.error(error.response?.data?.message || "Failed to delete task");
     }
   }
 
@@ -761,7 +762,7 @@ export function DataTable({
 
   async function updateTask(taskId, updatedTask) {
     if (!teamId) {
-      toast.error("Team ID missing");
+      notify.error("Team ID missing");
       return;
     }
     const previousData = data;
@@ -769,7 +770,7 @@ export function DataTable({
     const currentTask = data.find((task) => String(task.id) === String(taskId));
 
     if (!currentTask) {
-      toast.error("Task not found");
+      notify.error("Task not found");
       return;
     }
 
@@ -816,11 +817,11 @@ export function DataTable({
       await updateTeamTask(teamId, taskId, payload);
       await refreshParentTasks();
 
-      toast.success("Task updated successfully");
+      notify.success("Task updated successfully");
     } catch (error) {
       console.error("Update task failed:", error);
       setData(previousData);
-      toast.error(error.response?.data?.message || "Failed to update task");
+      notify.error(error.response?.data?.message || "Failed to update task");
     }
   }
 
@@ -1646,7 +1647,7 @@ function TableCellViewer({
     const taskTitle = formData.header.trim();
 
     if (!taskTitle) {
-      toast.error("Task title is required");
+      notify.error("Task title is required");
       return;
     }
 

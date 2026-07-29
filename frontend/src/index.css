@@ -162,20 +162,17 @@ select {
   }
 }
 
+/* Hide native date picker icon on mobile browsers */
 input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   cursor: pointer;
 }
 
-input[type="date"]::-webkit-inner-spin-button,
-input[type="date"]::-webkit-clear-button {
+input[type="date"]::-webkit-clear-button,
+input[type="date"]::-webkit-inner-spin-button {
   display: none;
-}
-
-input[type="date"]::-webkit-list-button {
-  display: none;
-}
-
-input[type="date"] {
-  appearance: none;
-  -webkit-appearance: none;
 }
