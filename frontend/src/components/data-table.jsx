@@ -538,6 +538,22 @@ export function DataTable({
   const isMember = currentUserRole === "member";
   const isViewer = currentUserRole === "viewer";
 
+  const newTaskDeadlineInputRef = React.useRef(null);
+
+  function openNewTaskDeadlinePicker() {
+    const input = newTaskDeadlineInputRef.current;
+
+    if (!input) return;
+
+    if (typeof input.showPicker === "function") {
+      input.showPicker();
+      return;
+    }
+
+    input.focus();
+    input.click();
+  }
+
   React.useEffect(() => {
     setData(initialData || []);
   }, [initialData]);
@@ -1039,18 +1055,33 @@ export function DataTable({
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div className="flex flex-col gap-3">
                         <Label htmlFor="new-task-deadline">Deadline</Label>
-                        <Input
-                          id="new-task-deadline"
-                          type="date"
-                          min={getTodayDateInputValue()}
-                          value={newTask.target}
-                          onChange={(e) =>
-                            setNewTask((prev) => ({
-                              ...prev,
-                              target: e.target.value,
-                            }))
-                          }
-                        />
+                        <div className="relative">
+                          <Input
+                            ref={newTaskDeadlineInputRef}
+                            id="new-task-deadline"
+                            type="date"
+                            min={getTodayDateInputValue()}
+                            value={newTask.target}
+                            onChange={(e) =>
+                              setNewTask((prev) => ({
+                                ...prev,
+                                target: e.target.value,
+                              }))
+                            }
+                            className="pr-10 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                          />
+
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={openNewTaskDeadlinePicker}
+                            className="absolute inset-y-1 right-1 my-auto size-8 text-muted-foreground transition-colors duration-150 hover:bg-muted/50 hover:text-foreground active:bg-muted/60 active:translate-y-0"
+                          >
+                            <CalendarIcon className="size-4" />
+                            <span className="sr-only">Open calendar</span>
+                          </Button>
+                        </div>
                       </div>
 
                       <div className="flex flex-col gap-3">
@@ -1261,18 +1292,33 @@ export function DataTable({
                         <Label htmlFor="new-task-deadline-desktop">
                           Deadline
                         </Label>
-                        <Input
-                          id="new-task-deadline-desktop"
-                          type="date"
-                          min={getTodayDateInputValue()}
-                          value={newTask.target}
-                          onChange={(e) =>
-                            setNewTask((prev) => ({
-                              ...prev,
-                              target: e.target.value,
-                            }))
-                          }
-                        />
+                        <div className="relative">
+                          <Input
+                            ref={newTaskDeadlineInputRef}
+                            id="new-task-deadline-desktop"
+                            type="date"
+                            min={getTodayDateInputValue()}
+                            value={newTask.target}
+                            onChange={(e) =>
+                              setNewTask((prev) => ({
+                                ...prev,
+                                target: e.target.value,
+                              }))
+                            }
+                            className="pr-10 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                          />
+
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={openNewTaskDeadlinePicker}
+                            className="absolute inset-y-1 right-1 my-auto size-8 text-muted-foreground transition-colors duration-150 hover:bg-muted/50 hover:text-foreground active:bg-muted/60 active:translate-y-0"
+                          >
+                            <CalendarIcon className="size-4" />
+                            <span className="sr-only">Open calendar</span>
+                          </Button>
+                        </div>
                       </div>
 
                       <div className="flex flex-col gap-2">

@@ -20,8 +20,7 @@ function App() {
 
         <Route path="*" element={<Navigate to="/signup" replace />} />
       </Routes>
-      <Toaster position="top-right" richColors
-      closeButton duration={1500} />
+      <Toaster position="top-right" theme="dark" closeButton duration={1500} />
     </>
   );
 }
