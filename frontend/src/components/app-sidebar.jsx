@@ -49,79 +49,85 @@ import {
   SettingsIcon,
 } from "lucide-react";
 
-const data = {
-  user: {
-    name: "Vivek",
-    email: "vivek@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: <LayoutDashboardIcon />,
-    },
-    {
-      title: "All Tasks",
-      url: "/tasks",
-      icon: <ListTodoIcon />,
-    },
-    {
-      title: "My Tasks",
-      url: "/my-tasks",
-      icon: <CheckSquareIcon />,
-    },
-    {
-      title: "Team Members",
-      url: "/team",
-      icon: <UsersIcon />,
-    },
-    {
-      title: "Announcements",
-      url: "/announcements",
-      icon: <BellIcon />,
-    },
-  ],
-
-  navSecondary: [
-    // {
-    //   title: "Settings",
-    //   url: "/settings",
-    //   icon: <Settings2Icon />,
-    // },
-    // {
-    //   title: "Get Help",
-    //   url: "/help",
-    //   icon: <CircleHelpIcon />,
-    // },
-    // {
-    //   title: "Search",
-    //   url: "/search",
-    //   icon: <SearchIcon />,
-    // },
-  ],
-
-  documents: [
-    // {
-    //   name: "Project Tasks",
-    //   url: "/tasks",
-    //   icon: <ClipboardListIcon />,
-    // },
-    {
-      name: "Deadlines",
-      url: "/deadlines",
-      icon: <ClockIcon />,
-    },
-    {
-      name: "Meetings",
-      url: "/meetings",
-      icon: <CalendarDaysIcon />,
-    },
-  ],
-};
-
 export function AppSidebar({ ...props }) {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+    setUser(storedUser);
+  }, []);
+
+  const data = {
+    user: {
+      name: user?.name || "",
+      email: user?.email || "",
+      avatar: user?.avatar || user?.email?.[0].toUpperCase() || "",
+    },
+
+    navMain: [
+      {
+        title: "Dashboard",
+        url: "/dashboard",
+        icon: <LayoutDashboardIcon />,
+      },
+      {
+        title: "All Tasks",
+        url: "/tasks",
+        icon: <ListTodoIcon />,
+      },
+      {
+        title: "My Tasks",
+        url: "/my-tasks",
+        icon: <CheckSquareIcon />,
+      },
+      {
+        title: "Team Members",
+        url: "/team",
+        icon: <UsersIcon />,
+      },
+      {
+        title: "Announcements",
+        url: "/announcements",
+        icon: <BellIcon />,
+      },
+    ],
+
+    navSecondary: [
+      // {
+      //   title: "Settings",
+      //   url: "/settings",
+      //   icon: <Settings2Icon />,
+      // },
+      // {
+      //   title: "Get Help",
+      //   url: "/help",
+      //   icon: <CircleHelpIcon />,
+      // },
+      // {
+      //   title: "Search",
+      //   url: "/search",
+      //   icon: <SearchIcon />,
+      // },
+    ],
+
+    documents: [
+      // {
+      //   name: "Project Tasks",
+      //   url: "/tasks",
+      //   icon: <ClipboardListIcon />,
+      // },
+      {
+        name: "Deadlines",
+        url: "/deadlines",
+        icon: <ClockIcon />,
+      },
+      {
+        name: "Meetings",
+        url: "/meetings",
+        icon: <CalendarDaysIcon />,
+      },
+    ],
+  };
   const navigate = useNavigate();
   const { teamId } = useParams();
 

@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -97,6 +96,7 @@ function getMemberPerformance(tasks = [], members = []) {
 }
 
 export function MemberPerformanceChart({ tasks = [], members = [] }) {
+  
   const chartData = React.useMemo(
     () => getMemberPerformance(tasks, members),
     [tasks, members],

@@ -204,7 +204,7 @@ export function ChartAreaInteractive({ tasks = [] }) {
         ) : (
           <ChartContainer
             config={chartConfig}
-            className="aspect-auto  h-62.5  w-full"
+            className="aspect-auto  h-[250px]  w-full"
           >
             <AreaChart
               data={chartData}

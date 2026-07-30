@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useEffect } from "react";
+import { z } from "zod";
 import { createTeamTask, deleteTeamTask, updateTeamTask } from "@/api/taskApi";
 import { cn } from "@/lib/utils";
 import {
@@ -31,8 +31,6 @@ import {
 } from "@tanstack/react-table";
 
 import { DatePicker } from "./ui/date-picker";
-import { z } from "zod";
-
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -76,6 +74,15 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
   GripVerticalIcon,
   CircleCheckIcon,
   LoaderIcon,
@@ -89,8 +96,8 @@ import {
   ChevronsRightIcon,
   CircleIcon,
   SearchIcon,
-  CalendarIcon,
 } from "lucide-react";
+import { notify } from "./ui/toast";
 
 export const schema = z.object({
   id: z.number(),
@@ -102,41 +109,78 @@ export const schema = z.object({
   reviewer: z.string(),
 });
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { notify } from "./ui/toast";
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
 
-function DragHandle({ id }) {
-  const { attributes, listeners } = useSortable({
-    id,
-  });
+const CATEGORY_OPTIONS = [
+  "General",
+  "Frontend",
+  "Backend",
+  "UI",
+  "Feature",
+  "Bug Fix",
+  "Planning",
+  "Research",
+  "Technical content",
+  "Narrative",
+  "Legal",
+  "Visual",
+  "Financial",
+  "Cover page",
+  "Table of contents",
+  "Plain language",
+];
 
-  return (
-    <Button
-      {...attributes}
-      {...listeners}
-      variant="ghost"
-      size="icon"
-      className="size-7 text-muted-foreground hover:bg-transparent"
-    >
-      <GripVerticalIcon className="size-3 text-muted-foreground" />
-      <span className="sr-only">Drag to reorder</span>
-    </Button>
-  );
+const STATUS_OPTIONS = ["Todo", "In Process", "Done"];
+const PRIORITY_OPTIONS = ["High", "Medium", "Low"];
+
+const COLUMN_LABELS = {
+  header: "Task",
+  type: "Category",
+  status: "Status",
+  target: "Deadline",
+  limit: "Priority",
+  reviewer: "Assigned To",
+};
+
+const PRIORITY_STYLES = {
+  High: {
+    badge:
+      "border-red-200 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300",
+    dot: "bg-red-500",
+  },
+  Medium: {
+    badge:
+      "border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-900/50 dark:bg-purple-950/30 dark:text-purple-300",
+    dot: "bg-purple-500",
+  },
+  Low: {
+    badge:
+      "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-300",
+    dot: "bg-blue-500",
+  },
+};
+
+const EMPTY_TASK = {
+  header: "",
+  description: "",
+  type: "Frontend",
+  status: "Todo",
+  target: "",
+  limit: "Medium",
+  reviewer: "Unassigned",
+  assignedToId: "",
+};
+
+// ---------------------------------------------------------------------------
+// Pure helpers
+// ---------------------------------------------------------------------------
+
+function getPriorityStyles(priority) {
+  return PRIORITY_STYLES[priority] || PRIORITY_STYLES.Medium;
 }
 
-function getTodayDateInputValue() {
-  const today = new Date();
-  today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
-  return today.toISOString().split("T")[0];
-}
 function formatDeadline(value) {
   if (!value) return "No deadline";
 
@@ -147,323 +191,23 @@ function formatDeadline(value) {
   });
 }
 
-function getPriorityStyles(priority) {
-  if (priority === "High") {
-    return {
-      badge:
-        "border-red-200 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300",
-      dot: "bg-red-500",
-    };
+// Resolves a select value ("__unassigned" | memberId) into the
+// { assignedToId, reviewer } pair every assignment flow needs.
+// `fallbackReviewer` is only used when merging a partial update where the
+// member list doesn't (yet) contain a match — mirrors the previous inline logic.
+function resolveAssignee(members, value, fallbackReviewer) {
+  if (!value || value === "__unassigned") {
+    return { assignedToId: "", reviewer: "Unassigned" };
   }
 
-  if (priority === "Medium") {
-    return {
-      badge:
-        "border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-900/50 dark:bg-purple-950/30 dark:text-purple-300",
-      dot: "bg-purple-500",
-    };
-  }
+  const member = members.find((m) => String(m.id) === String(value));
 
   return {
-    badge:
-      "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-300",
-    dot: "bg-blue-500",
+    assignedToId: value,
+    reviewer: member?.name || fallbackReviewer || "Unknown user",
   };
 }
 
-const columns = [
-  {
-    id: "drag",
-    header: () => null,
-    cell: ({ row }) => <DragHandle id={row.original.id} />,
-    enableSorting: false,
-    enableHiding: false,
-    meta: {
-      headerClassName: "w-10",
-      cellClassName: "w-10",
-    },
-  },
-  {
-    id: "select",
-    header: ({ table }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      </div>
-    ),
-    enableSorting: false,
-    enableHiding: false,
-    meta: {
-      headerClassName: "w-10",
-      cellClassName: "w-10",
-    },
-  },
-  {
-    accessorKey: "header",
-    header: "Task",
-    cell: ({ row, table }) => {
-      return (
-        <TableCellViewer
-          item={row.original}
-          onSaveTask={table.options.meta?.updateTask}
-          members={table.options.meta?.members || []}
-          canManageTasks={table.options.meta?.canManageTasks}
-          isMember={table.options.meta?.isMember}
-          currentUserId={table.options.meta?.currentUserId}
-        />
-      );
-    },
-    enableHiding: false,
-    meta: {
-      headerClassName: "w-[280px] min-w-[280px] max-w-[280px]",
-      cellClassName: "w-[280px] min-w-[280px] max-w-[280px] overflow-hidden",
-    },
-  },
-  {
-    accessorKey: "type",
-    header: "Category",
-    cell: ({ row }) => (
-      <Badge
-        variant="outline"
-        className="max-w-32.5 truncate px-2 text-muted-foreground"
-        title={row.original.type}
-      >
-        {row.original.type}
-      </Badge>
-    ),
-    meta: {
-      headerClassName: "w-[170px]",
-      cellClassName: "w-[170px]",
-    },
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => {
-      const status = row.original.status;
-
-      return (
-        <Badge
-          variant="outline"
-          className="gap-1.5 px-1.5 text-muted-foreground"
-        >
-          {status === "Done" ? (
-            <CircleCheckIcon className="size-3.5 fill-green-500 dark:fill-green-400" />
-          ) : status === "In Process" ? (
-            <LoaderIcon className="size-3.5" />
-          ) : (
-            <CircleIcon className="size-3.5" />
-          )}
-
-          {status}
-        </Badge>
-      );
-    },
-    meta: {
-      headerClassName: "w-[150px]",
-      cellClassName: "w-[150px]",
-    },
-  },
-  {
-    accessorKey: "target",
-    header: "Deadline",
-    cell: ({ row }) => {
-      const deadline = row.original.target;
-
-      return (
-        <div className="text-right text-sm text-muted-foreground">
-          {formatDeadline(deadline)}
-        </div>
-      );
-    },
-    meta: {
-      headerClassName: "w-[150px] text-right",
-      cellClassName: "w-[150px] text-right",
-    },
-  },
-  {
-    accessorKey: "limit",
-    header: "Priority",
-    cell: ({ row }) => {
-      const priority = row.original.limit || "Medium";
-      const styles = getPriorityStyles(priority);
-
-      return (
-        <div className="flex justify-end">
-          <Badge
-            variant="outline"
-            className={`gap-2 rounded-md px-2.5 py-1 text-xs font-medium ${styles.badge}`}
-          >
-            <span className={`size-1.5 rounded-full ${styles.dot}`} />
-            {priority}
-          </Badge>
-        </div>
-      );
-    },
-    meta: {
-      headerClassName: "w-[130px] text-right",
-      cellClassName: "w-[130px] text-right",
-    },
-  },
-  {
-    accessorKey: "reviewer",
-    header: "Assignee",
-
-    cell: ({ row, table }) => {
-      const members = table.options.meta?.members || [];
-
-      return (
-        <Select
-          value={String(row.original.assignedToId || "__unassigned")}
-          disabled={!table.options.meta?.canManageTasks}
-          onValueChange={(value) => {
-            const selectedMember = members.find(
-              (member) => String(member.id) === String(value),
-            );
-
-            table.options.meta?.updateTask(row.original.id, {
-              assignedToId: value === "__unassigned" ? "" : value,
-
-              reviewer:
-                value === "__unassigned"
-                  ? "Unassigned"
-                  : selectedMember?.name || "Unknown user",
-            });
-          }}
-        >
-          <SelectTrigger className="w-full min-w-40 lg:min-w-0">
-            <SelectValue placeholder="Assign member" />
-          </SelectTrigger>
-
-          <SelectContent>
-            <SelectItem value="__unassigned">Unassigned</SelectItem>
-
-            {members.map((member) => (
-              <SelectItem key={member.id} value={String(member.id)}>
-                {member.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      );
-    },
-
-    meta: {
-      headerClassName: "w-[180px] min-w-[180px] lg:w-auto lg:min-w-0",
-      cellClassName: "w-[180px] min-w-[180px] lg:w-auto lg:min-w-0",
-    },
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row, table }) => (
-      <div className="flex justify-end">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
-              size="icon"
-            >
-              <EllipsisVerticalIcon />
-              <span className="sr-only">Open menu</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-44">
-            {(table.options.meta?.canManageTasks ||
-              (table.options.meta?.isMember &&
-                String(row.original.assignedToId) ===
-                  String(table.options.meta?.currentUserId))) && (
-              <DropdownMenuItem
-                onClick={() =>
-                  table.options.meta?.markTaskDone(row.original.id)
-                }
-              >
-                Mark completed
-              </DropdownMenuItem>
-            )}
-
-            {table.options.meta?.canManageTasks && (
-              <>
-                <DropdownMenuSeparator />
-
-                <DropdownMenuItem
-                  variant="destructive"
-                  onClick={() =>
-                    table.options.meta?.deleteTask(row.original.id)
-                  }
-                >
-                  Delete task
-                </DropdownMenuItem>
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    ),
-    meta: {
-      headerClassName: "w-12",
-      cellClassName: "w-12",
-    },
-  },
-];
-
-function DraggableRow({ row }) {
-  const { transform, transition, setNodeRef, isDragging } = useSortable({
-    id: row.original.id,
-  });
-
-  return (
-    <TableRow
-      data-state={row.getIsSelected() && "selected"}
-      data-dragging={isDragging}
-      ref={setNodeRef}
-      className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition,
-      }}
-    >
-      {row.getVisibleCells().map((cell) => (
-        <TableCell
-          key={cell.id}
-          className={cn(
-            "h-14 whitespace-nowrap px-4 align-middle",
-            cell.column.columnDef.meta?.cellClassName,
-          )}
-        >
-          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-        </TableCell>
-      ))}
-    </TableRow>
-  );
-}
-
-const emptyTask = {
-  header: "",
-  description: "",
-  type: "Frontend",
-  status: "Todo",
-  target: "",
-  limit: "Medium",
-  reviewer: "Unassigned",
-  assignedToId: "",
-};
 function toBackendStatus(status) {
   if (status === "Todo") return "pending";
   if (status === "In Process") return "in-progress";
@@ -512,6 +256,432 @@ function formatTaskForTable(task) {
     assignedToId,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Small shared components
+// ---------------------------------------------------------------------------
+
+const DragHandle = React.memo(function DragHandle({ id }) {
+  const { attributes, listeners } = useSortable({ id });
+
+  return (
+    <Button
+      {...attributes}
+      {...listeners}
+      variant="ghost"
+      size="icon"
+      className="size-7 text-muted-foreground hover:bg-transparent"
+    >
+      <GripVerticalIcon className="size-3 text-muted-foreground" />
+      <span className="sr-only">Drag to reorder</span>
+    </Button>
+  );
+});
+
+// Used by: the table's Assignee cell, the add-task form, and the edit drawer —
+// previously reimplemented four times with slightly different markup.
+function MemberSelect({ id, value, members, disabled, onChange, className }) {
+  return (
+    <Select
+      value={String(value || "__unassigned")}
+      disabled={disabled}
+      onValueChange={onChange}
+    >
+      <SelectTrigger id={id} className={className || "w-full"}>
+        <SelectValue placeholder="Assign member" />
+      </SelectTrigger>
+
+      <SelectContent>
+        <SelectGroup>
+          <SelectItem value="__unassigned">Unassigned</SelectItem>
+
+          {members.map((member) => (
+            <SelectItem key={member.id} value={String(member.id)}>
+              {member.name}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
+  );
+}
+
+// The task title/description/category/status/deadline/priority/assignee
+// fields, shared by the mobile "add task" drawer, the desktop "add task"
+// dialog, and the per-row edit drawer. Previously this whole block was
+// duplicated three times (~250 lines) and could drift out of sync.
+function TaskFormFields({
+  idPrefix,
+  values,
+  onFieldChange,
+  onAssigneeChange,
+  members,
+  disabled = {},
+}) {
+  return (
+    <>
+      <div className="flex flex-col gap-3">
+        <Label htmlFor={`${idPrefix}-header`}>Task Title</Label>
+        <Input
+          id={`${idPrefix}-header`}
+          value={values.header}
+          disabled={disabled.header}
+          onChange={(e) => onFieldChange("header", e.target.value)}
+          placeholder="Example: Build dashboard layout"
+        />
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <Label htmlFor={`${idPrefix}-description`}>Description</Label>
+        <Textarea
+          id={`${idPrefix}-description`}
+          value={values.description}
+          disabled={disabled.description}
+          onChange={(e) => onFieldChange("description", e.target.value)}
+          placeholder="Add more details about this task..."
+          rows={3}
+          className="resize-none"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-3">
+          <Label htmlFor={`${idPrefix}-category`}>Category</Label>
+          <Select
+            value={values.type}
+            disabled={disabled.type}
+            onValueChange={(value) => onFieldChange("type", value)}
+          >
+            <SelectTrigger id={`${idPrefix}-category`} className="w-full">
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+
+            <SelectContent>
+              <SelectGroup>
+                {CATEGORY_OPTIONS.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <Label htmlFor={`${idPrefix}-status`}>Status</Label>
+          <Select
+            value={values.status}
+            disabled={disabled.status}
+            onValueChange={(value) => onFieldChange("status", value)}
+          >
+            <SelectTrigger id={`${idPrefix}-status`} className="w-full">
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+
+            <SelectContent>
+              <SelectGroup>
+                {STATUS_OPTIONS.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-3">
+          <Label htmlFor={`${idPrefix}-deadline`}>Deadline</Label>
+          <DatePicker
+            value={values.target}
+            onChange={(value) => onFieldChange("target", value)}
+          />
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <Label htmlFor={`${idPrefix}-priority`}>Priority</Label>
+          <Select
+            value={values.limit}
+            disabled={disabled.limit}
+            onValueChange={(value) => onFieldChange("limit", value)}
+          >
+            <SelectTrigger id={`${idPrefix}-priority`} className="w-full">
+              <SelectValue placeholder="Select priority" />
+            </SelectTrigger>
+
+            <SelectContent>
+              <SelectGroup>
+                {PRIORITY_OPTIONS.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <Label htmlFor={`${idPrefix}-assignee`}>Assigned To</Label>
+        <MemberSelect
+          id={`${idPrefix}-assignee`}
+          value={values.assignedToId}
+          members={members}
+          disabled={disabled.assignedToId}
+          onChange={onAssigneeChange}
+        />
+      </div>
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Table columns
+// ---------------------------------------------------------------------------
+
+const columns = [
+  {
+    id: "drag",
+    header: () => null,
+    cell: ({ row }) => <DragHandle id={row.original.id} />,
+    enableSorting: false,
+    enableHiding: false,
+    meta: { headerClassName: "w-10", cellClassName: "w-10" },
+  },
+  {
+    id: "select",
+    header: ({ table }) => (
+      <div className="flex items-center justify-center">
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      </div>
+    ),
+    cell: ({ row }) => (
+      <div className="flex items-center justify-center">
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      </div>
+    ),
+    enableSorting: false,
+    enableHiding: false,
+    meta: { headerClassName: "w-10", cellClassName: "w-10" },
+  },
+  {
+    accessorKey: "header",
+    header: "Task",
+    cell: ({ row, table }) => (
+      <TableCellViewer
+        item={row.original}
+        onSaveTask={table.options.meta?.updateTask}
+        members={table.options.meta?.members || []}
+        canManageTasks={table.options.meta?.canManageTasks}
+        isMember={table.options.meta?.isMember}
+        currentUserId={table.options.meta?.currentUserId}
+      />
+    ),
+    enableHiding: false,
+    meta: {
+      headerClassName: "w-[280px] min-w-[280px] max-w-[280px]",
+      cellClassName: "w-[280px] min-w-[280px] max-w-[280px] overflow-hidden",
+    },
+  },
+  {
+    accessorKey: "type",
+    header: "Category",
+    cell: ({ row }) => (
+      <Badge
+        variant="outline"
+        className="max-w-32.5 truncate px-2 text-muted-foreground"
+        title={row.original.type}
+      >
+        {row.original.type}
+      </Badge>
+    ),
+    meta: { headerClassName: "w-[170px]", cellClassName: "w-[170px]" },
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const status = row.original.status;
+
+      return (
+        <Badge
+          variant="outline"
+          className="gap-1.5 px-1.5 text-muted-foreground"
+        >
+          {status === "Done" ? (
+            <CircleCheckIcon className="size-3.5 fill-green-500 dark:fill-green-400" />
+          ) : status === "In Process" ? (
+            <LoaderIcon className="size-3.5" />
+          ) : (
+            <CircleIcon className="size-3.5" />
+          )}
+          {status}
+        </Badge>
+      );
+    },
+    meta: { headerClassName: "w-[150px]", cellClassName: "w-[150px]" },
+  },
+  {
+    accessorKey: "target",
+    header: "Deadline",
+    cell: ({ row }) => (
+      <div className="text-right text-sm text-muted-foreground">
+        {formatDeadline(row.original.target)}
+      </div>
+    ),
+    meta: {
+      headerClassName: "w-[150px] text-right",
+      cellClassName: "w-[150px] text-right",
+    },
+  },
+  {
+    accessorKey: "limit",
+    header: "Priority",
+    cell: ({ row }) => {
+      const priority = row.original.limit || "Medium";
+      const styles = getPriorityStyles(priority);
+
+      return (
+        <div className="flex justify-end">
+          <Badge
+            variant="outline"
+            className={`gap-2 rounded-md px-2.5 py-1 text-xs font-medium ${styles.badge}`}
+          >
+            <span className={`size-1.5 rounded-full ${styles.dot}`} />
+            {priority}
+          </Badge>
+        </div>
+      );
+    },
+    meta: {
+      headerClassName: "w-[130px] text-right",
+      cellClassName: "w-[130px] text-right",
+    },
+  },
+  {
+    accessorKey: "reviewer",
+    header: "Assignee",
+    cell: ({ row, table }) => {
+      const members = table.options.meta?.members || [];
+
+      return (
+        <MemberSelect
+          value={row.original.assignedToId}
+          members={members}
+          disabled={!table.options.meta?.canManageTasks}
+          className="w-full min-w-40 lg:min-w-0"
+          onChange={(value) => {
+            table.options.meta?.updateTask(
+              row.original.id,
+              resolveAssignee(members, value),
+            );
+          }}
+        />
+      );
+    },
+    meta: {
+      headerClassName: "w-[180px] min-w-[180px] lg:w-auto lg:min-w-0",
+      cellClassName: "w-[180px] min-w-[180px] lg:w-auto lg:min-w-0",
+    },
+  },
+  {
+    id: "actions",
+    enableHiding: false,
+    cell: ({ row, table }) => (
+      <div className="flex justify-end">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
+              size="icon"
+            >
+              <EllipsisVerticalIcon />
+              <span className="sr-only">Open menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            {(table.options.meta?.canManageTasks ||
+              (table.options.meta?.isMember &&
+                String(row.original.assignedToId) ===
+                  String(table.options.meta?.currentUserId))) && (
+              <DropdownMenuItem
+                onClick={() =>
+                  table.options.meta?.markTaskDone(row.original.id)
+                }
+              >
+                Mark completed
+              </DropdownMenuItem>
+            )}
+
+            {table.options.meta?.canManageTasks && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() =>
+                    table.options.meta?.deleteTask(row.original.id)
+                  }
+                >
+                  Delete task
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    ),
+    meta: { headerClassName: "w-12", cellClassName: "w-12" },
+  },
+];
+
+function DraggableRow({ row }) {
+  const { transform, transition, setNodeRef, isDragging } = useSortable({
+    id: row.original.id,
+  });
+
+  return (
+    <TableRow
+      data-state={row.getIsSelected() && "selected"}
+      data-dragging={isDragging}
+      ref={setNodeRef}
+      className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+    >
+      {row.getVisibleCells().map((cell) => (
+        <TableCell
+          key={cell.id}
+          className={cn(
+            "h-14 whitespace-nowrap px-4 align-middle",
+            cell.column.columnDef.meta?.cellClassName,
+          )}
+        >
+          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+        </TableCell>
+      ))}
+    </TableRow>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main table
+// ---------------------------------------------------------------------------
+
 export function DataTable({
   data: initialData,
   teamId,
@@ -532,35 +702,16 @@ export function DataTable({
     pageSize: 10,
   });
   const [isAddTaskOpen, setIsAddTaskOpen] = React.useState(false);
-  const [newTask, setNewTask] = React.useState(emptyTask);
+  const [newTask, setNewTask] = React.useState(EMPTY_TASK);
   const isMobile = useIsMobile();
+
   const canManageTasks =
     currentUserRole === "owner" || currentUserRole === "admin";
-
   const isMember = currentUserRole === "member";
-  const isViewer = currentUserRole === "viewer";
 
-  const newTaskDeadlineInputRef = React.useRef(null);
-
-  function openNewTaskDeadlinePicker() {
-    const input = newTaskDeadlineInputRef.current;
-
-    if (!input) return;
-
-    if (typeof input.showPicker === "function") {
-      input.showPicker();
-      return;
-    }
-
-    input.focus();
-    input.click();
-  }
-
+  // Was previously two separate effects doing the same sync — merged into one.
   React.useEffect(() => {
     setData(initialData || []);
-  }, [initialData]);
-  useEffect(() => {
-    setData(initialData);
   }, [initialData]);
 
   const sortableId = React.useId();
@@ -571,16 +722,17 @@ export function DataTable({
     useSensor(KeyboardSensor, {}),
   );
 
-  const counts = React.useMemo(() => {
-    return {
+  const counts = React.useMemo(
+    () => ({
       all: data.length,
       inProcess: data.filter((task) => task.status === "In Process").length,
       completed: data.filter((task) => task.status === "Done").length,
       unassigned: data.filter(
         (task) => !task.assignedToId || task.reviewer === "Unassigned",
       ).length,
-    };
-  }, [data]);
+    }),
+    [data],
+  );
 
   const refreshParentTasks = async () => {
     if (typeof onTasksChange === "function") {
@@ -591,25 +743,17 @@ export function DataTable({
   const filteredData = React.useMemo(() => {
     let tasks = data;
 
-    if (view === "in-process") {
-      tasks = tasks.filter((task) => task.status === "In Process");
-    }
-
-    if (view === "completed") {
-      tasks = tasks.filter((task) => task.status === "Done");
-    }
-
+    if (view === "in-process")
+      tasks = tasks.filter((t) => t.status === "In Process");
+    if (view === "completed") tasks = tasks.filter((t) => t.status === "Done");
     if (view === "unassigned") {
       tasks = tasks.filter(
-        (task) => !task.assignedToId || task.reviewer === "Unassigned",
+        (t) => !t.assignedToId || t.reviewer === "Unassigned",
       );
     }
 
     const query = searchQuery.trim().toLowerCase();
-
-    if (!query) {
-      return tasks;
-    }
+    if (!query) return tasks;
 
     return tasks.filter((task) => {
       const searchableText = [
@@ -649,7 +793,6 @@ export function DataTable({
       members,
       canManageTasks,
       isMember,
-      isViewer,
       currentUserId,
     },
     getRowId: (row) => row.id.toString(),
@@ -667,22 +810,26 @@ export function DataTable({
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
-  function handleDragEnd(event) {
+  const handleDragEnd = React.useCallback((event) => {
     const { active, over } = event;
+    if (!active || !over || active.id === over.id) return;
 
-    if (active && over && active.id !== over.id) {
-      setData((currentData) => {
-        const oldIndex = currentData.findIndex((task) => task.id === active.id);
-        const newIndex = currentData.findIndex((task) => task.id === over.id);
+    setData((currentData) => {
+      const oldIndex = currentData.findIndex((task) => task.id === active.id);
+      const newIndex = currentData.findIndex((task) => task.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return currentData;
+      return arrayMove(currentData, oldIndex, newIndex);
+    });
+  }, []);
 
-        if (oldIndex === -1 || newIndex === -1) {
-          return currentData;
-        }
-
-        return arrayMove(currentData, oldIndex, newIndex);
-      });
-    }
+  function handleNewTaskFieldChange(field, value) {
+    setNewTask((prev) => ({ ...prev, [field]: value }));
   }
+
+  function handleNewTaskAssigneeChange(value) {
+    setNewTask((prev) => ({ ...prev, ...resolveAssignee(members, value) }));
+  }
+
   async function handleAddTask(e) {
     e.preventDefault();
 
@@ -711,20 +858,14 @@ export function DataTable({
 
       const createdTask = await createTeamTask(teamId, taskPayload);
       await refreshParentTasks();
-      const selectedMember = members.find(
-        (member) => String(member.id) === String(newTask.assignedToId),
-      );
 
       const formattedTask = {
         ...formatTaskForTable(createdTask),
-        assignedToId: newTask.assignedToId || "",
-        reviewer: newTask.assignedToId
-          ? selectedMember?.name || "Unknown user"
-          : "Unassigned",
+        ...resolveAssignee(members, newTask.assignedToId || "__unassigned"),
       };
 
       setData((currentData) => [formattedTask, ...currentData]);
-      setNewTask(emptyTask);
+      setNewTask(EMPTY_TASK);
       setIsAddTaskOpen(false);
       setView("all");
       setPagination((prev) => ({ ...prev, pageIndex: 0 }));
@@ -735,6 +876,7 @@ export function DataTable({
       notify.error(error.response?.data?.message || "Failed to create task");
     }
   }
+
   async function deleteTask(taskId) {
     if (!teamId) {
       notify.error("Team ID missing");
@@ -744,9 +886,19 @@ export function DataTable({
     try {
       await deleteTeamTask(teamId, taskId);
       await refreshParentTasks();
+
       setData((currentData) =>
         currentData.filter((task) => String(task.id) !== String(taskId)),
       );
+
+      // Keep selection state in sync so counts/"select all" don't reference
+      // a row that no longer exists.
+      setRowSelection((prev) => {
+        if (!(String(taskId) in prev)) return prev;
+        const next = { ...prev };
+        delete next[String(taskId)];
+        return next;
+      });
 
       notify.success("Task deleted successfully");
     } catch (error) {
@@ -756,9 +908,7 @@ export function DataTable({
   }
 
   async function markTaskDone(taskId) {
-    await updateTask(taskId, {
-      status: "Done",
-    });
+    await updateTask(taskId, { status: "Done" });
   }
 
   async function updateTask(taskId, updatedTask) {
@@ -766,8 +916,8 @@ export function DataTable({
       notify.error("Team ID missing");
       return;
     }
-    const previousData = data;
 
+    const previousData = data;
     const currentTask = data.find((task) => String(task.id) === String(taskId));
 
     if (!currentTask) {
@@ -775,21 +925,10 @@ export function DataTable({
       return;
     }
 
-    const mergedTask = {
-      ...currentTask,
-      ...updatedTask,
-    };
-
-    const selectedMember = members.find(
-      (member) => String(member.id) === String(mergedTask.assignedToId),
-    );
-
+    const mergedTask = { ...currentTask, ...updatedTask };
     const updatedUiTask = {
       ...mergedTask,
-      assignedToId: mergedTask.assignedToId || "",
-      reviewer: mergedTask.assignedToId
-        ? selectedMember?.name || mergedTask.reviewer || "Unknown user"
-        : "Unassigned",
+      ...resolveAssignee(members, mergedTask.assignedToId, mergedTask.reviewer),
     };
 
     setData((currentData) =>
@@ -799,9 +938,7 @@ export function DataTable({
     );
 
     try {
-      // ONLY SEND FIELDS THAT CHANGED
       const payload = {};
-
       if (updatedTask.header !== undefined) payload.title = mergedTask.header;
       if (updatedTask.description !== undefined)
         payload.description = mergedTask.description || "";
@@ -825,6 +962,16 @@ export function DataTable({
       notify.error(error.response?.data?.message || "Failed to update task");
     }
   }
+
+  const addTaskForm = (
+    <TaskFormFields
+      idPrefix="new-task"
+      values={newTask}
+      onFieldChange={handleNewTaskFieldChange}
+      onAssigneeChange={handleNewTaskAssigneeChange}
+      members={members}
+    />
+  );
 
   return (
     <Tabs
@@ -864,15 +1011,12 @@ export function DataTable({
           <TabsTrigger value="all">
             All Tasks <Badge variant="secondary">{counts.all}</Badge>
           </TabsTrigger>
-
           <TabsTrigger value="in-process">
             In Process <Badge variant="secondary">{counts.inProcess}</Badge>
           </TabsTrigger>
-
           <TabsTrigger value="completed">
             Completed <Badge variant="secondary">{counts.completed}</Badge>
           </TabsTrigger>
-
           <TabsTrigger value="unassigned">
             Unassigned <Badge variant="secondary">{counts.unassigned}</Badge>
           </TabsTrigger>
@@ -881,7 +1025,6 @@ export function DataTable({
         <div className="flex items-center gap-2">
           <div className="relative hidden md:block">
             <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-
             <Input
               value={searchQuery}
               onChange={(e) => {
@@ -893,6 +1036,7 @@ export function DataTable({
               className="h-8 w-55 pl-8 lg:w-65"
             />
           </div>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
@@ -910,29 +1054,18 @@ export function DataTable({
                     typeof column.accessorFn !== "undefined" &&
                     column.getCanHide(),
                 )
-                .map((column) => {
-                  const columnLabels = {
-                    header: "Task",
-                    type: "Category",
-                    status: "Status",
-                    target: "Deadline",
-                    limit: "Priority",
-                    reviewer: "Assigned To",
-                  };
-
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {columnLabels[column.id] || column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
+                .map((column) => (
+                  <DropdownMenuCheckboxItem
+                    key={column.id}
+                    className="capitalize"
+                    checked={column.getIsVisible()}
+                    onCheckedChange={(value) =>
+                      column.toggleVisibility(!!value)
+                    }
+                  >
+                    {COLUMN_LABELS[column.id] || column.id}
+                  </DropdownMenuCheckboxItem>
+                ))}
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -958,211 +1091,10 @@ export function DataTable({
                     onSubmit={handleAddTask}
                     className="flex flex-col gap-4 overflow-y-auto px-4 pb-4 text-sm"
                   >
-                    <div className="flex flex-col gap-3">
-                      <Label htmlFor="new-task-title">Task Title</Label>
-                      <Input
-                        id="new-task-title"
-                        value={newTask.header}
-                        onChange={(e) =>
-                          setNewTask((prev) => ({
-                            ...prev,
-                            header: e.target.value,
-                          }))
-                        }
-                        placeholder="Example: Build dashboard layout"
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-3">
-                      <Label htmlFor="new-task-description">Description</Label>
-                      <Textarea
-                        id="new-task-description"
-                        value={newTask.description}
-                        onChange={(e) =>
-                          setNewTask((prev) => ({
-                            ...prev,
-                            description: e.target.value,
-                          }))
-                        }
-                        placeholder="Add more details about this task..."
-                        rows={3}
-                        className="resize-none"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div className="flex flex-col gap-3">
-                        <Label htmlFor="new-task-category">Category</Label>
-                        <Select
-                          value={newTask.type}
-                          onValueChange={(value) =>
-                            setNewTask((prev) => ({
-                              ...prev,
-                              type: value,
-                            }))
-                          }
-                        >
-                          <SelectTrigger
-                            id="new-task-category"
-                            className="w-full"
-                          >
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-
-                          <SelectContent>
-                            <SelectGroup>
-                              <SelectItem value="General">General</SelectItem>
-                              <SelectItem value="Frontend">Frontend</SelectItem>
-                              <SelectItem value="Backend">Backend</SelectItem>
-                              <SelectItem value="UI">UI</SelectItem>
-                              <SelectItem value="Feature">Feature</SelectItem>
-                              <SelectItem value="Bug Fix">Bug Fix</SelectItem>
-                              <SelectItem value="Planning">Planning</SelectItem>
-                              <SelectItem value="Research">Research</SelectItem>
-                              <SelectItem value="Technical content">
-                                Technical content
-                              </SelectItem>
-                              <SelectItem value="Narrative">
-                                Narrative
-                              </SelectItem>
-                              <SelectItem value="Legal">Legal</SelectItem>
-                              <SelectItem value="Visual">Visual</SelectItem>
-                              <SelectItem value="Financial">
-                                Financial
-                              </SelectItem>
-                              <SelectItem value="Cover page">
-                                Cover page
-                              </SelectItem>
-                              <SelectItem value="Table of contents">
-                                Table of contents
-                              </SelectItem>
-                              <SelectItem value="Plain language">
-                                Plain language
-                              </SelectItem>
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="flex flex-col gap-3">
-                        <Label htmlFor="new-task-status">Status</Label>
-                        <Select
-                          value={newTask.status}
-                          onValueChange={(value) =>
-                            setNewTask((prev) => ({
-                              ...prev,
-                              status: value,
-                            }))
-                          }
-                        >
-                          <SelectTrigger
-                            id="new-task-status"
-                            className="w-full"
-                          >
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-
-                          <SelectContent>
-                            <SelectGroup>
-                              <SelectItem value="Todo">Todo</SelectItem>
-                              <SelectItem value="In Process">
-                                In Process
-                              </SelectItem>
-                              <SelectItem value="Done">Done</SelectItem>
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div className="flex flex-col gap-3">
-                        <Label>Deadline</Label>
-
-                        <DatePicker
-                          value={newTask.target}
-                          onChange={(value) =>
-                            setNewTask((prev) => ({
-                              ...prev,
-                              target: value,
-                            }))
-                          }
-                        />
-                      </div>
-
-                      <div className="flex flex-col gap-3">
-                        <Label htmlFor="new-task-priority">Priority</Label>
-                        <Select
-                          value={newTask.limit}
-                          onValueChange={(value) =>
-                            setNewTask((prev) => ({
-                              ...prev,
-                              limit: value,
-                            }))
-                          }
-                        >
-                          <SelectTrigger
-                            id="new-task-priority"
-                            className="w-full"
-                          >
-                            <SelectValue placeholder="Select priority" />
-                          </SelectTrigger>
-
-                          <SelectContent>
-                            <SelectGroup>
-                              <SelectItem value="High">High</SelectItem>
-                              <SelectItem value="Medium">Medium</SelectItem>
-                              <SelectItem value="Low">Low</SelectItem>
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="grid gap-2">
-                      <Label htmlFor="assignedTo">Assign to</Label>
-
-                      <Select
-                        value={String(newTask.assignedToId || "__unassigned")}
-                        onValueChange={(value) => {
-                          const selectedMember = members.find(
-                            (member) => String(member.id) === String(value),
-                          );
-
-                          setNewTask((prev) => ({
-                            ...prev,
-                            assignedToId: value === "__unassigned" ? "" : value,
-                            reviewer:
-                              value === "__unassigned"
-                                ? "Unassigned"
-                                : selectedMember?.name || "Unknown user",
-                          }));
-                        }}
-                      >
-                        <SelectTrigger id="assignedTo" className="w-full">
-                          <SelectValue placeholder="Assign member" />
-                        </SelectTrigger>
-
-                        <SelectContent>
-                          <SelectItem value="__unassigned">
-                            Unassigned
-                          </SelectItem>
-
-                          {members.map((member) => (
-                            <SelectItem
-                              key={member.id}
-                              value={String(member.id)}
-                            >
-                              {member.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    {addTaskForm}
 
                     <DrawerFooter className="px-0 pt-2">
                       <Button type="submit">Create Task</Button>
-
                       <DrawerClose asChild>
                         <Button type="button" variant="outline">
                           Cancel
@@ -1193,223 +1125,7 @@ export function DataTable({
                     onSubmit={handleAddTask}
                     className="space-y-4 px-6 pb-6 text-sm"
                   >
-                    <div className="flex flex-col gap-2">
-                      <Label htmlFor="new-task-title-desktop">Task Title</Label>
-                      <Input
-                        id="new-task-title-desktop"
-                        value={newTask.header}
-                        onChange={(e) =>
-                          setNewTask((prev) => ({
-                            ...prev,
-                            header: e.target.value,
-                          }))
-                        }
-                        placeholder="Example: Build dashboard layout"
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                      <Label htmlFor="new-task-description-desktop">
-                        Description
-                      </Label>
-                      <Textarea
-                        id="new-task-description-desktop"
-                        value={newTask.description}
-                        onChange={(e) =>
-                          setNewTask((prev) => ({
-                            ...prev,
-                            description: e.target.value,
-                          }))
-                        }
-                        placeholder="Add more details about this task..."
-                        rows={3}
-                        className="resize-none"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex flex-col gap-2">
-                        <Label htmlFor="new-task-category-desktop">
-                          Category
-                        </Label>
-                        <Select
-                          value={newTask.type}
-                          onValueChange={(value) =>
-                            setNewTask((prev) => ({
-                              ...prev,
-                              type: value,
-                            }))
-                          }
-                        >
-                          <SelectTrigger
-                            id="new-task-category-desktop"
-                            className="w-full"
-                          >
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-
-                          <SelectContent>
-                            <SelectGroup>
-                              <SelectItem value="General">General</SelectItem>
-                              <SelectItem value="Frontend">Frontend</SelectItem>
-                              <SelectItem value="Backend">Backend</SelectItem>
-                              <SelectItem value="UI">UI</SelectItem>
-                              <SelectItem value="Feature">Feature</SelectItem>
-                              <SelectItem value="Bug Fix">Bug Fix</SelectItem>
-                              <SelectItem value="Planning">Planning</SelectItem>
-                              <SelectItem value="Research">Research</SelectItem>
-                              <SelectItem value="Technical content">
-                                Technical content
-                              </SelectItem>
-                              <SelectItem value="Narrative">
-                                Narrative
-                              </SelectItem>
-                              <SelectItem value="Legal">Legal</SelectItem>
-                              <SelectItem value="Visual">Visual</SelectItem>
-                              <SelectItem value="Financial">
-                                Financial
-                              </SelectItem>
-                              <SelectItem value="Cover page">
-                                Cover page
-                              </SelectItem>
-                              <SelectItem value="Table of contents">
-                                Table of contents
-                              </SelectItem>
-                              <SelectItem value="Plain language">
-                                Plain language
-                              </SelectItem>
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="flex flex-col gap-2">
-                        <Label htmlFor="new-task-status-desktop">Status</Label>
-                        <Select
-                          value={newTask.status}
-                          onValueChange={(value) =>
-                            setNewTask((prev) => ({
-                              ...prev,
-                              status: value,
-                            }))
-                          }
-                        >
-                          <SelectTrigger
-                            id="new-task-status-desktop"
-                            className="w-full"
-                          >
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-
-                          <SelectContent>
-                            <SelectGroup>
-                              <SelectItem value="Todo">Todo</SelectItem>
-                              <SelectItem value="In Process">
-                                In Process
-                              </SelectItem>
-                              <SelectItem value="Done">Done</SelectItem>
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex flex-col gap-2">
-                        <Label htmlFor="new-task-deadline-desktop">
-                          Deadline
-                        </Label>
-
-                        <DatePicker
-                          value={newTask.target}
-                          onChange={(value) =>
-                            setNewTask((prev) => ({
-                              ...prev,
-                              target: value,
-                            }))
-                          }
-                        />
-                      </div>
-
-                      <div className="flex flex-col gap-2">
-                        <Label htmlFor="new-task-priority-desktop">
-                          Priority
-                        </Label>
-                        <Select
-                          value={newTask.limit}
-                          onValueChange={(value) =>
-                            setNewTask((prev) => ({
-                              ...prev,
-                              limit: value,
-                            }))
-                          }
-                        >
-                          <SelectTrigger
-                            id="new-task-priority-desktop"
-                            className="w-full"
-                          >
-                            <SelectValue placeholder="Select priority" />
-                          </SelectTrigger>
-
-                          <SelectContent>
-                            <SelectGroup>
-                              <SelectItem value="High">High</SelectItem>
-                              <SelectItem value="Medium">Medium</SelectItem>
-                              <SelectItem value="Low">Low</SelectItem>
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                      <Label htmlFor="new-task-assigned-to-desktop">
-                        Assigned To
-                      </Label>
-
-                      <Select
-                        value={String(newTask.assignedToId || "__unassigned")}
-                        disabled={!table.options.meta?.canManageTasks}
-                        onValueChange={(value) => {
-                          const selectedMember = members.find(
-                            (member) => String(member.id) === String(value),
-                          );
-
-                          setNewTask((prev) => ({
-                            ...prev,
-                            assignedToId: value === "__unassigned" ? "" : value,
-                            reviewer:
-                              value === "__unassigned"
-                                ? "Unassigned"
-                                : selectedMember?.name || "Unknown user",
-                          }));
-                        }}
-                      >
-                        <SelectTrigger
-                          id="new-task-assigned-to-desktop"
-                          className="w-full"
-                        >
-                          <SelectValue placeholder="Assign member" />
-                        </SelectTrigger>
-
-                        <SelectContent>
-                          <SelectGroup>
-                            <SelectItem value="__unassigned">
-                              Unassigned
-                            </SelectItem>
-
-                            {members.map((member) => (
-                              <SelectItem
-                                key={member.id}
-                                value={String(member.id)}
-                              >
-                                {member.name}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    {addTaskForm}
 
                     <DialogFooter className="pt-2">
                       <Button
@@ -1431,7 +1147,6 @@ export function DataTable({
       <div className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6">
         <div className="relative md:hidden">
           <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-
           <Input
             value={searchQuery}
             onChange={(e) => {
@@ -1443,6 +1158,7 @@ export function DataTable({
             className="h-9 pl-8"
           />
         </div>
+
         <div className="overflow-x-auto rounded-lg border lg:overflow-x-hidden">
           <DndContext
             collisionDetection={closestCenter}
@@ -1455,25 +1171,23 @@ export function DataTable({
               <TableHeader className="sticky top-0 z-10 bg-muted">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      return (
-                        <TableHead
-                          key={header.id}
-                          colSpan={header.colSpan}
-                          className={cn(
-                            "h-12 whitespace-nowrap px-4 align-middle",
-                            header.column.columnDef.meta?.headerClassName,
-                          )}
-                        >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext(),
-                              )}
-                        </TableHead>
-                      );
-                    })}
+                    {headerGroup.headers.map((header) => (
+                      <TableHead
+                        key={header.id}
+                        colSpan={header.colSpan}
+                        className={cn(
+                          "h-12 whitespace-nowrap px-4 align-middle",
+                          header.column.columnDef.meta?.headerClassName,
+                        )}
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                      </TableHead>
+                    ))}
                   </TableRow>
                 ))}
               </TableHeader>
@@ -1517,9 +1231,7 @@ export function DataTable({
 
               <Select
                 value={`${table.getState().pagination.pageSize}`}
-                onValueChange={(value) => {
-                  table.setPageSize(Number(value));
-                }}
+                onValueChange={(value) => table.setPageSize(Number(value))}
               >
                 <SelectTrigger size="sm" className="w-20" id="rows-per-page">
                   <SelectValue
@@ -1605,11 +1317,12 @@ function TableCellViewer({
 }) {
   const isMobile = useIsMobile();
   const [open, setOpen] = React.useState(false);
+
   const canMemberUpdateStatus =
     isMember && String(item.assignedToId) === String(currentUserId);
-
   const canEditFullTask = canManageTasks;
   const canUpdateOnlyStatus = canMemberUpdateStatus && !canManageTasks;
+
   const [formData, setFormData] = React.useState({
     header: item.header,
     description: item.description || "",
@@ -1634,6 +1347,14 @@ function TableCellViewer({
     });
   }, [item]);
 
+  function handleFormFieldChange(field, value) {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  }
+
+  function handleFormAssigneeChange(value) {
+    setFormData((prev) => ({ ...prev, ...resolveAssignee(members, value) }));
+  }
+
   function handleSaveChanges(e) {
     e.preventDefault();
 
@@ -1645,19 +1366,12 @@ function TableCellViewer({
     }
 
     if (canUpdateOnlyStatus) {
-      onSaveTask?.(item.id, {
-        status: formData.status,
-      });
-
+      onSaveTask?.(item.id, { status: formData.status });
       setOpen(false);
       return;
     }
 
-    onSaveTask?.(item.id, {
-      ...formData,
-      header: taskTitle,
-    });
-
+    onSaveTask?.(item.id, { ...formData, header: taskTitle });
     setOpen(false);
   }
 
@@ -1678,10 +1392,10 @@ function TableCellViewer({
           </span>
         </button>
       </DrawerTrigger>
+
       <DrawerContent>
         <DrawerHeader className="gap-1">
           <DrawerTitle>{formData.header}</DrawerTitle>
-
           <DrawerDescription>
             View and update task details, assignment, status and priority.
           </DrawerDescription>
@@ -1697,24 +1411,20 @@ function TableCellViewer({
                 <span className="text-muted-foreground">Status</span>
                 <Badge variant="outline">{formData.status}</Badge>
               </div>
-
               <div className="flex items-center justify-between gap-4">
                 <span className="text-muted-foreground">Category</span>
                 <span className="font-medium">{formData.type}</span>
               </div>
-
               <div className="flex items-center justify-between gap-4">
                 <span className="text-muted-foreground">Deadline</span>
                 <span className="font-medium">
                   {formatDeadline(formData.target)}
                 </span>
               </div>
-
               <div className="flex items-center justify-between gap-4">
                 <span className="text-muted-foreground">Priority</span>
                 <span className="font-medium">{formData.limit}</span>
               </div>
-
               <div className="flex items-center justify-between gap-4">
                 <span className="text-muted-foreground">Assigned To</span>
                 <span className="font-medium">
@@ -1726,200 +1436,26 @@ function TableCellViewer({
             </div>
           </div>
 
-          <div className="flex flex-col gap-3">
-            <Label htmlFor={`${item.id}-header`}>Task Title</Label>
-            <Input
-              id={`${item.id}-header`}
-              value={formData.header}
-              disabled={!canEditFullTask}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  header: e.target.value,
-                }))
-              }
-            />
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <Label htmlFor={`${item.id}-description`}>Description</Label>
-            <Textarea
-              id={`${item.id}-description`}
-              value={formData.description}
-              disabled={!canEditFullTask}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  description: e.target.value,
-                }))
-              }
-              placeholder="Add more details about this task..."
-              rows={3}
-              className="resize-none"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-3">
-              <Label htmlFor={`${item.id}-type`}>Category</Label>
-
-              <Select
-                value={formData.type}
-                disabled={!canEditFullTask}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    type: value,
-                  }))
-                }
-              >
-                <SelectTrigger id={`${item.id}-type`} className="w-full">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="Frontend">Frontend</SelectItem>
-                    <SelectItem value="Backend">Backend</SelectItem>
-                    <SelectItem value="UI">UI</SelectItem>
-                    <SelectItem value="Feature">Feature</SelectItem>
-                    <SelectItem value="Bug Fix">Bug Fix</SelectItem>
-                    <SelectItem value="Planning">Planning</SelectItem>
-                    <SelectItem value="Research">Research</SelectItem>
-                    <SelectItem value="Technical content">
-                      Technical content
-                    </SelectItem>
-                    <SelectItem value="Narrative">Narrative</SelectItem>
-                    <SelectItem value="Legal">Legal</SelectItem>
-                    <SelectItem value="Visual">Visual</SelectItem>
-                    <SelectItem value="Financial">Financial</SelectItem>
-                    <SelectItem value="Cover page">Cover page</SelectItem>
-                    <SelectItem value="Table of contents">
-                      Table of contents
-                    </SelectItem>
-                    <SelectItem value="Plain language">
-                      Plain language
-                    </SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <Label htmlFor={`${item.id}-status`}>Status</Label>
-
-              <Select
-                value={formData.status}
-                disabled={!canEditFullTask && !canUpdateOnlyStatus}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    status: value,
-                  }))
-                }
-              >
-                <SelectTrigger id={`${item.id}-status`} className="w-full">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="Todo">Todo</SelectItem>
-                    <SelectItem value="In Process">In Process</SelectItem>
-                    <SelectItem value="Done">Done</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-3">
-              <Label>Deadline</Label>
-
-              <DatePicker
-                value={formData.target}
-                onChange={(value) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    target: value,
-                  }))
-                }
-              />
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <Label htmlFor={`${item.id}-limit`}>Priority</Label>
-
-              <Select
-                value={formData.limit}
-                disabled={!canEditFullTask}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    limit: value,
-                  }))
-                }
-              >
-                <SelectTrigger id={`${item.id}-limit`} className="w-full">
-                  <SelectValue placeholder="Select priority" />
-                </SelectTrigger>
-
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="High">High</SelectItem>
-                    <SelectItem value="Medium">Medium</SelectItem>
-                    <SelectItem value="Low">Low</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <Label htmlFor={`${item.id}-reviewer`}>Assigned To</Label>
-
-            <Select
-              value={String(formData.assignedToId || "__unassigned")}
-              disabled={!canEditFullTask}
-              onValueChange={(value) => {
-                const selectedMember = members.find(
-                  (member) => String(member.id) === String(value),
-                );
-
-                setFormData((prev) => ({
-                  ...prev,
-                  assignedToId: value === "__unassigned" ? "" : value,
-                  reviewer:
-                    value === "__unassigned"
-                      ? "Unassigned"
-                      : selectedMember?.name || "Unknown user",
-                }));
-              }}
-            >
-              <SelectTrigger id={`${item.id}-reviewer`} className="w-full">
-                <SelectValue placeholder="Assign member" />
-              </SelectTrigger>
-
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="__unassigned">Unassigned</SelectItem>
-
-                  {members.map((member) => (
-                    <SelectItem key={member.id} value={String(member.id)}>
-                      {member.name}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
+          <TaskFormFields
+            idPrefix={String(item.id)}
+            values={formData}
+            onFieldChange={handleFormFieldChange}
+            onAssigneeChange={handleFormAssigneeChange}
+            members={members}
+            disabled={{
+              header: !canEditFullTask,
+              description: !canEditFullTask,
+              type: !canEditFullTask,
+              status: !canEditFullTask && !canUpdateOnlyStatus,
+              limit: !canEditFullTask,
+              assignedToId: !canEditFullTask,
+            }}
+          />
 
           <DrawerFooter className="px-0">
             {(canEditFullTask || canUpdateOnlyStatus) && (
               <Button type="submit">Save changes</Button>
             )}
-
             <DrawerClose asChild>
               <Button type="button" variant="outline">
                 Cancel

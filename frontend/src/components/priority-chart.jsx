@@ -63,6 +63,7 @@ function getPriorityCounts(tasks = []) {
 }
 
 export function PriorityChart({ tasks = [] }) {
+  
   const priorityCounts = React.useMemo(() => getPriorityCounts(tasks), [tasks]);
 
   const totalTasks =

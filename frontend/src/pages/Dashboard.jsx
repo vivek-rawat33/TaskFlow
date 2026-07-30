@@ -482,7 +482,7 @@ function TeamMembersSection({
 
           {canManageMembers && (
             <Button
-              varient="default"
+              variant="default"
               onClick={() => setIsAddMemberOpen(true)}
               className="gap-2 bg-foreground text-background hover:bg-foreground/90"
             >
