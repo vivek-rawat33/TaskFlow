@@ -5,6 +5,7 @@ import Page from "./pages/Dashboard.jsx";
 import LandingPage from "./pages/LandingPage";
 import TermsAndPrivacy from "./pages/TermsAndPrivacy";
 import { Toaster } from "sonner";
+import AuthCallback from "./pages/AuthCallback.jsx";
 function App() {
   return (
     <>
