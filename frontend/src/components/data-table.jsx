@@ -703,6 +703,15 @@ export function DataTable({
   });
   const [isAddTaskOpen, setIsAddTaskOpen] = React.useState(false);
   const [newTask, setNewTask] = React.useState(EMPTY_TASK);
+
+  // `isAddingTask` drives the button's visual disabled/loading state.
+  // `addingTaskRef` is the real guard: state updates land on the *next*
+  // render, so a fast double-click can fire handleAddTask twice before
+  // React ever shows the button as disabled. The ref is set synchronously,
+  // so the second call bails out immediately regardless of render timing.
+  const [isAddingTask, setIsAddingTask] = React.useState(false);
+  const addingTaskRef = React.useRef(false);
+
   const isMobile = useIsMobile();
 
   const canManageTasks =
@@ -833,6 +842,9 @@ export function DataTable({
   async function handleAddTask(e) {
     e.preventDefault();
 
+    // Bail out instantly on a repeat click while a create is in flight.
+    if (addingTaskRef.current) return;
+
     const taskTitle = newTask.header.trim();
 
     if (!taskTitle) {
@@ -845,6 +857,9 @@ export function DataTable({
       return;
     }
 
+    addingTaskRef.current = true;
+    setIsAddingTask(true);
+
     try {
       const taskPayload = {
         title: taskTitle,
@@ -856,15 +871,17 @@ export function DataTable({
         assignedTo: newTask.assignedToId || null,
       };
 
-      const createdTask = await createTeamTask(teamId, taskPayload);
+      await createTeamTask(teamId, taskPayload);
+
+      // `refreshParentTasks` re-syncs `data` from the server via the
+      // `initialData` effect above — that's now the single source of truth
+      // for the new row. We previously ALSO prepended a locally-formatted
+      // task into `data` right after this, which is what was causing the
+      // task to appear twice: once from the server sync, once from the
+      // manual prepend. Removed — do not add it back without removing the
+      // refresh, or vice versa.
       await refreshParentTasks();
 
-      const formattedTask = {
-        ...formatTaskForTable(createdTask),
-        ...resolveAssignee(members, newTask.assignedToId || "__unassigned"),
-      };
-
-      setData((currentData) => [formattedTask, ...currentData]);
       setNewTask(EMPTY_TASK);
       setIsAddTaskOpen(false);
       setView("all");
@@ -874,6 +891,9 @@ export function DataTable({
     } catch (error) {
       console.error("Create task failed:", error);
       notify.error(error.response?.data?.message || "Failed to create task");
+    } finally {
+      addingTaskRef.current = false;
+      setIsAddingTask(false);
     }
   }
 
@@ -1071,7 +1091,15 @@ export function DataTable({
 
           {canManageTasks &&
             (isMobile ? (
-              <Drawer open={isAddTaskOpen} onOpenChange={setIsAddTaskOpen}>
+              <Drawer
+                open={isAddTaskOpen}
+                onOpenChange={(open) => {
+                  // Block closing the sheet mid-submit so the in-flight
+                  // request can't get orphaned from its form state.
+                  if (isAddingTask) return;
+                  setIsAddTaskOpen(open);
+                }}
+              >
                 <DrawerTrigger asChild>
                   <Button variant="outline" size="sm">
                     <PlusIcon />
@@ -1094,9 +1122,15 @@ export function DataTable({
                     {addTaskForm}
 
                     <DrawerFooter className="px-0 pt-2">
-                      <Button type="submit">Create Task</Button>
+                      <Button type="submit" disabled={isAddingTask}>
+                        {isAddingTask ? "Creating..." : "Create Task"}
+                      </Button>
                       <DrawerClose asChild>
-                        <Button type="button" variant="outline">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={isAddingTask}
+                        >
                           Cancel
                         </Button>
                       </DrawerClose>
@@ -1105,7 +1139,13 @@ export function DataTable({
                 </DrawerContent>
               </Drawer>
             ) : (
-              <Dialog open={isAddTaskOpen} onOpenChange={setIsAddTaskOpen}>
+              <Dialog
+                open={isAddTaskOpen}
+                onOpenChange={(open) => {
+                  if (isAddingTask) return;
+                  setIsAddTaskOpen(open);
+                }}
+              >
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm">
                     <PlusIcon />
@@ -1131,11 +1171,14 @@ export function DataTable({
                       <Button
                         type="button"
                         variant="outline"
+                        disabled={isAddingTask}
                         onClick={() => setIsAddTaskOpen(false)}
                       >
                         Cancel
                       </Button>
-                      <Button type="submit">Create Task</Button>
+                      <Button type="submit" disabled={isAddingTask}>
+                        {isAddingTask ? "Creating..." : "Create Task"}
+                      </Button>
                     </DialogFooter>
                   </form>
                 </DialogContent>

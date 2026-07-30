@@ -6,20 +6,24 @@ import LandingPage from "./pages/LandingPage";
 import TermsAndPrivacy from "./pages/TermsAndPrivacy";
 import { Toaster } from "sonner";
 import AuthCallback from "./pages/AuthCallback.jsx";
+import { PublicRoute, ProtectedRoute } from "./components/protectedRoute.jsx";
 function App() {
   return (
     <>
       <Routes>
         <Route path="/" element={<LandingPage />} />
 
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/signin" element={<LoginPage />} />
+        <Route element={<PublicRoute />}>
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/signin" element={<LoginPage />} />
+        </Route>
+
         <Route path="/auth/callback" element={<AuthCallback />} />
-        <Route path="/dashboard" element={<Page />} />
         <Route path="/terms-and-privacy" element={<TermsAndPrivacy />} />
-
-        <Route path="/dashboard/:teamId/*" element={<Page />} />
-
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<Page />} />
+          <Route path="/dashboard/:teamId/*" element={<Page />} />
+        </Route>
         <Route path="*" element={<Navigate to="/signup" replace />} />
       </Routes>
       <Toaster
