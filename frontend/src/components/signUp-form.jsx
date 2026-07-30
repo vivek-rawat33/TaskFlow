@@ -147,7 +147,13 @@ export function SignupForm({ className, ...props }) {
                 Or continue with
               </FieldSeparator>
               <Field className="grid gap-4">
-                <Button variant="outline" type="button">
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={() =>
+                    (window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`)
+                  }
+                >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                     <path
                       fill="#4285F4"

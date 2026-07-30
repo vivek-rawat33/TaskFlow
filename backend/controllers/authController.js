@@ -98,7 +98,12 @@ export const getMe = async (req, res, next) => {
   try {
     res.status(200).json({
       message: "User fetched successfully",
-      user: { _id: req.user._id, name: req.user.name, email: req.user.email },
+      user: {
+        _id: req.user._id,
+        name: req.user.name,
+        email: req.user.email,
+        avatar: req.user.avatar,
+      },
     });
   } catch (error) {
     next(error);
@@ -118,17 +123,7 @@ export const googleLogin = async (req, res, next) => {
       },
     );
 
-    return res.status(200).json({
-      success: true,
-      message: "google login successfull",
-      token,
-      user: {
-        id: req.user._id,
-        name: req.user.name,
-        email: req.user.email,
-        avatar: req.user.avatar,
-      },
-    });
+    res.redirect(`${process.env.CLIENT_URL}/auth/callback?token=${token}`);
   } catch (error) {
     next(error);
   }

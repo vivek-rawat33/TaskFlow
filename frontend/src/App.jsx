@@ -13,6 +13,7 @@ function App() {
 
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/signin" element={<LoginPage />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/dashboard" element={<Page />} />
         <Route path="/terms-and-privacy" element={<TermsAndPrivacy />} />
 
