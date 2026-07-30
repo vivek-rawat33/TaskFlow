@@ -6,7 +6,8 @@ import taskRoutes from "./routes/taskRoutes.js";
 import { notFound, errorHandler } from "./middleware/errorHandler.js";
 import authRoutes from "./routes/authRoutes.js";
 import teamRoutes from "./routes/teamRoutes.js";
-
+import passport from "passport";
+import "./config/passport.js";
 dotenv.config();
 
 const app = express();
@@ -42,6 +43,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 app.use(express.json());
+app.use(passport.initialize());
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({ message: "Task Tracker API is running" });

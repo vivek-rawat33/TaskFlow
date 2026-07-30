@@ -22,15 +22,31 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, "Password is required"],
       minlength: [6, "Password must be at least 6 characters"],
       maxlength: [100, "Password cannot exceed 100 characters"],
       select: false, // Exclude password from query results by default
+      default: null,
+    },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      default: null,
+    },
+
+    avatar: {
+      type: String,
+      default: "",
+    },
+
+    authProvider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
     },
   },
   { timestamps: true },
 );
-
 
 const User = mongoose.model("User", userSchema);
 

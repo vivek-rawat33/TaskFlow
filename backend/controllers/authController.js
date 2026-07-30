@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import User from "../models/userModel.js";
+import passport from "passport";
 
 //check existing user and password match then login user and return token
 export const userSignin = async (req, res, next) => {
@@ -98,6 +99,35 @@ export const getMe = async (req, res, next) => {
     res.status(200).json({
       message: "User fetched successfully",
       user: { _id: req.user._id, name: req.user.name, email: req.user.email },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const googleLogin = async (req, res, next) => {
+  try {
+    const token = jwt.sign(
+      {
+        id: req.user._id,
+        email: req.user.email,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: JWT_EXPIRES_IN || "7d",
+      },
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "google login successfull",
+      token,
+      user: {
+        id: req.user._id,
+        name: req.user.name,
+        email: req.user.email,
+        avatar: req.user.avatar,
+      },
     });
   } catch (error) {
     next(error);
