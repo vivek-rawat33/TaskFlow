@@ -111,7 +111,7 @@ function getDeadlineCounts(tasks = []) {
   );
 }
 
-export function DeadlineChart({ tasks = [] }) {
+export const DeadlineChart = React.memo(function DeadlineChart({ tasks = [] }) {
   const deadlineCounts = React.useMemo(() => getDeadlineCounts(tasks), [tasks]);
 
   const totalTasks =
@@ -231,4 +231,4 @@ export function DeadlineChart({ tasks = [] }) {
       </CardContent>
     </Card>
   );
-}
+});

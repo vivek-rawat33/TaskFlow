@@ -1,6 +1,7 @@
 import express from "express";
 import { protect } from "../middleware/authMiddleware.js";
 import announcementRoutes from "./announcementRoutes.js";
+import meetingRoutes from "./meetingRoutes.js";
 import {
   createTeam,
   deleteTeam,
@@ -24,6 +25,7 @@ router.post("/:teamId/members", protect, addTeamMember);
 
 router.use("/:teamId/tasks", taskRoutes);
 router.use("/:teamId/announcements", announcementRoutes);
+router.use("/:teamId/meetings", meetingRoutes);
 router.delete("/:teamId/members/:memberId", protect, removeTeamMember);
 router.patch("/:teamId/members/:memberId/role", protect, changeMemberRole);
 router.patch("/:teamId", protect, updateTeam);

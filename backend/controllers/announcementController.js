@@ -9,7 +9,7 @@ export const getAnnouncements = async (req, res, next) => {
     const membership = await TeamMember.findOne({
       teamId,
       userId: currentUserId,
-    });
+    }).lean();
 
     if (!membership) {
       return res.status(403).json({
@@ -19,7 +19,8 @@ export const getAnnouncements = async (req, res, next) => {
 
     const announcements = await Announcement.find({ teamId })
       .populate("createdBy", "name email")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     return res.status(200).json({
       message: "Announcements fetched successfully",

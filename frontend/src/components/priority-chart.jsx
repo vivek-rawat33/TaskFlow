@@ -62,7 +62,7 @@ function getPriorityCounts(tasks = []) {
   );
 }
 
-export function PriorityChart({ tasks = [] }) {
+export const PriorityChart = React.memo(function PriorityChart({ tasks = [] }) {
   
   const priorityCounts = React.useMemo(() => getPriorityCounts(tasks), [tasks]);
 
@@ -160,4 +160,4 @@ export function PriorityChart({ tasks = [] }) {
       </CardContent>
     </Card>
   );
-}
+});

@@ -95,7 +95,7 @@ function getMemberPerformance(tasks = [], members = []) {
     .slice(0, 5);
 }
 
-export function MemberPerformanceChart({ tasks = [], members = [] }) {
+export const MemberPerformanceChart = React.memo(function MemberPerformanceChart({ tasks = [], members = [] }) {
   
   const chartData = React.useMemo(
     () => getMemberPerformance(tasks, members),
@@ -180,4 +180,4 @@ export function MemberPerformanceChart({ tasks = [], members = [] }) {
       </CardContent>
     </Card>
   );
-}
+});

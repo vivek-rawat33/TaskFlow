@@ -77,6 +77,18 @@ taskSchema.index(
   },
 );
 taskSchema.index(
+  { teamId: 1, status: 1 },
+  {
+    name: "tasks_by_team_status",
+  },
+);
+taskSchema.index(
+  { teamId: 1, priority: 1 },
+  {
+    name: "tasks_by_team_priority",
+  },
+);
+taskSchema.index(
   { teamId: 1, assignedTo: 1 },
   {
     name: "tasks_by_team_assignee",

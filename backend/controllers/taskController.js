@@ -50,7 +50,7 @@ export const getTasks = async (req, res, next) => {
     const membership = await TeamMember.findOne({
       teamId,
       userId: currentUserId,
-    });
+    }).lean();
 
     if (!membership) {
       return res.status(403).json({
@@ -80,7 +80,8 @@ export const getTasks = async (req, res, next) => {
     const tasks = await Task.find(filter)
       .populate("createdBy", "name email")
       .populate("assignedTo", "name email")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     return res.status(200).json({
       message: "Tasks fetched successfully",

@@ -72,7 +72,7 @@ function formatDateLabel(value) {
   });
 }
 
-export function ChartAreaInteractive({ tasks = [] }) {
+export const ChartAreaInteractive = React.memo(function ChartAreaInteractive({ tasks = [] }) {
   const isMobile = useIsMobile();
   const [timeRange, setTimeRange] = React.useState("90d");
 
@@ -303,4 +303,4 @@ export function ChartAreaInteractive({ tasks = [] }) {
       </CardContent>
     </Card>
   );
-}
+});

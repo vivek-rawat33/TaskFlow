@@ -110,23 +110,7 @@ export function AppSidebar({ ...props }) {
       // },
     ],
 
-    documents: [
-      // {
-      //   name: "Project Tasks",
-      //   url: "/tasks",
-      //   icon: <ClipboardListIcon />,
-      // },
-      {
-        name: "Deadlines",
-        url: "/deadlines",
-        icon: <ClockIcon />,
-      },
-      {
-        name: "Meetings",
-        url: "/meetings",
-        icon: <CalendarDaysIcon />,
-      },
-    ],
+    documents: [],
   };
   const navigate = useNavigate();
   const { teamId } = useParams();
@@ -219,6 +203,21 @@ export function AppSidebar({ ...props }) {
     if (!teamId) return "";
     return `/dashboard/${teamId}${path}`;
   };
+
+  const documents = hasSelectedTeam
+    ? [
+        {
+          name: "Deadlines",
+          url: getTeamPath("/deadlines"),
+          icon: <ClockIcon />,
+        },
+        {
+          name: "Meetings",
+          url: getTeamPath("/meetings"),
+          icon: <CalendarDaysIcon />,
+        },
+      ]
+    : [];
 
   const navMain = hasSelectedTeam
     ? [
@@ -321,7 +320,7 @@ export function AppSidebar({ ...props }) {
           </SidebarGroup>
 
           <NavMain items={navMain} />
-          <NavDocuments items={data.documents} />
+          <NavDocuments items={documents} />
           <NavSecondary items={data.navSecondary} className="mt-auto" />
         </SidebarContent>
 

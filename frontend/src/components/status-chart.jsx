@@ -98,7 +98,7 @@ function getStatusCounts(tasks = []) {
   );
 }
 
-export function StatusChart({ tasks = [] }) {
+export const StatusChart = React.memo(function StatusChart({ tasks = [] }) {
   const statusCounts = React.useMemo(() => getStatusCounts(tasks), [tasks]);
   const [activeIndex, setActiveIndex] = React.useState(null);
   const totalTasks =
@@ -207,4 +207,4 @@ export function StatusChart({ tasks = [] }) {
       </CardContent>
     </Card>
   );
-}
+});

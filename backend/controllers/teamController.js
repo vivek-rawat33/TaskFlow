@@ -37,7 +37,9 @@ export const getTeams = async (req, res, next) => {
   try {
     const memberships = await TeamMember.find({
       userId: req.user._id,
-    }).populate("teamId");
+    })
+      .populate("teamId")
+      .lean();
 
     res.status(200).json({
       message: "Teams fetched successfully",
@@ -59,7 +61,7 @@ export const getTeamById = async (req, res, next) => {
     const membership = await TeamMember.findOne({
       teamId,
       userId,
-    });
+    }).lean();
 
     if (!membership) {
       return res.status(403).json({
@@ -67,7 +69,7 @@ export const getTeamById = async (req, res, next) => {
       });
     }
 
-    const team = await Team.findById(teamId);
+    const team = await Team.findById(teamId).lean();
     if (!team) {
       return res.status(404).json({
         message: "no team found",
@@ -87,7 +89,7 @@ export const getTeamMember = async (req, res, next) => {
   try {
     const teamId = req.params.teamId;
     const userId = req.user._id;
-    const membership = await TeamMember.findOne({ teamId, userId });
+    const membership = await TeamMember.findOne({ teamId, userId }).lean();
 
     if (!membership) {
       return res.status(403).json({
@@ -95,10 +97,9 @@ export const getTeamMember = async (req, res, next) => {
       });
     }
 
-    const members = await TeamMember.find({ teamId }).populate(
-      "userId",
-      "name email",
-    );
+    const members = await TeamMember.find({ teamId })
+      .populate("userId", "name email")
+      .lean();
 
     res.status(200).json({
       message: "Members fetched successfully",
