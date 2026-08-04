@@ -5,10 +5,12 @@ import {
   getTasks,
   updateTask,
   deleteTask,
+  getAllUserTasks,
 } from "../controllers/taskController.js";
 
 const router = express.Router({ mergeParams: true });
 
+router.get("/all-my-tasks", protect, getAllUserTasks);
 router.get("/", protect, getTasks);
 router.post("/", protect, createTask);
 

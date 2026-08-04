@@ -27,3 +27,8 @@ export const deleteTeamTask = async (teamId, taskId) => {
   const response = await apiClient.delete(`/teams/${teamId}/tasks/${taskId}`);
   return response.data;
 };
+
+export const getAllUserTasks = async () => {
+  const response = await apiClient.get("/tasks/all-my-tasks");
+  return response.data;
+};

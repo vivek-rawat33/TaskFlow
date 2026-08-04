@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
 import { createTeam, getMyTeams } from "@/api/teamApi";
+import { getTeamTasks } from "@/api/taskApi";
 import {
   Sidebar,
   SidebarContent,
@@ -116,11 +117,65 @@ export function AppSidebar({ ...props }) {
   const { teamId } = useParams();
 
   const [teams, setTeams] = useState([]);
+  const [overdueCount, setOverdueCount] = useState(0);
   const [isCreateTeamOpen, setIsCreateTeamOpen] = useState(false);
   const [teamForm, setTeamForm] = useState({
     name: "",
     description: "",
   });
+
+  useEffect(() => {
+    async function checkOverdue() {
+      if (!teamId) {
+        setOverdueCount(0);
+        return;
+      }
+      try {
+        const res = await getTeamTasks(teamId);
+        const tasks = res.tasks || [];
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        let currentUserId = user?._id || user?.id || "";
+        if (!currentUserId) {
+          const token = localStorage.getItem("token");
+          if (token) {
+            try {
+              const payload = JSON.parse(atob(token.split(".")[1]));
+              currentUserId = payload._id || payload.id || payload.userId || "";
+            } catch (e) {}
+          }
+        }
+
+        const overdue = tasks.filter((t) => {
+          const isDone =
+            t.status === "completed" ||
+            t.status === "Done" ||
+            t.rawStatus === "completed";
+          if (isDone || !t.dueDate) return false;
+
+          if (currentUserId) {
+            const assigneeId = String(
+              t.assignedTo?._id || t.assignedTo || t.assignedToId || "",
+            );
+            if (assigneeId && assigneeId !== String(currentUserId)) {
+              return false;
+            }
+          }
+
+          const due = new Date(t.dueDate);
+          due.setHours(0, 0, 0, 0);
+          return due < today;
+        });
+
+        setOverdueCount(overdue.length);
+      } catch (error) {
+        // ignore error silently
+      }
+    }
+
+    checkOverdue();
+  }, [teamId, user]);
 
   useEffect(() => {
     async function fetchTeams() {
@@ -210,6 +265,7 @@ export function AppSidebar({ ...props }) {
           name: "Deadlines",
           url: getTeamPath("/deadlines"),
           icon: <ClockIcon />,
+          badgeCount: overdueCount,
         },
         {
           name: "Meetings",

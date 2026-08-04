@@ -304,3 +304,36 @@ export const deleteTask = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getAllUserTasks = async (req, res, next) => {
+  try {
+    const currentUserId = req.user._id;
+
+    const memberships = await TeamMember.find({ userId: currentUserId })
+      .select("teamId")
+      .lean();
+
+    const teamIds = memberships.map((m) => m.teamId).filter(Boolean);
+
+    if (teamIds.length === 0) {
+      return res.status(200).json({
+        message: "No tasks found",
+        tasks: [],
+      });
+    }
+
+    const tasks = await Task.find({ teamId: { $in: teamIds } })
+      .populate("teamId", "name description")
+      .populate("createdBy", "name email")
+      .populate("assignedTo", "name email")
+      .sort({ dueDate: 1, createdAt: -1 })
+      .lean();
+
+    return res.status(200).json({
+      message: "All user tasks fetched successfully",
+      tasks,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
