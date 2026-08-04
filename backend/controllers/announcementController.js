@@ -52,7 +52,7 @@ export const createAnnouncement = async (req, res, next) => {
     const membership = await TeamMember.findOne({
       teamId,
       userId: currentUserId,
-    });
+    }).lean();
 
     if (!membership) {
       return res.status(403).json({
@@ -94,7 +94,7 @@ export const deleteAnnouncement = async (req, res, next) => {
     const membership = await TeamMember.findOne({
       teamId,
       userId: currentUserId,
-    });
+    }).lean();
 
     if (!membership) {
       return res.status(403).json({
@@ -108,7 +108,7 @@ export const deleteAnnouncement = async (req, res, next) => {
       });
     }
 
-    const announcement = await Announcement.findOne({
+    const announcement = await Announcement.findOneAndDelete({
       _id: announcementId,
       teamId,
     });
@@ -118,11 +118,6 @@ export const deleteAnnouncement = async (req, res, next) => {
         message: "Announcement not found",
       });
     }
-
-    await Announcement.deleteOne({
-      _id: announcementId,
-      teamId,
-    });
 
     return res.status(200).json({
       message: "Announcement deleted successfully",

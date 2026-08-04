@@ -33,10 +33,7 @@ teamMemberSchema.index(
 
 teamMemberSchema.index(
   { teamId: 1, userId: 1 },
-  { unique: true },
-  {
-    name: "unique_teamMember",
-  },
+  { unique: true, name: "unique_teamMember" }
 );
 
 const TeamMember = mongoose.model("TeamMember", teamMemberSchema);

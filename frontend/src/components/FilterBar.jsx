@@ -1,3 +1,5 @@
+import React from "react";
+
 function FilterBar({ filters, onFilterChange, onClear }) {
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
@@ -44,4 +46,4 @@ function FilterBar({ filters, onFilterChange, onClear }) {
   );
 }
 
-export default FilterBar;
+export default React.memo(FilterBar);

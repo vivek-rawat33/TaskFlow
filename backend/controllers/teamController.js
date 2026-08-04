@@ -2,6 +2,8 @@ import Team from "../models/teamModel.js";
 import TeamMember from "../models/teamMemberModel.js";
 import User from "../models/userModel.js";
 import Task from "../models/Task.js";
+import Announcement from "../models/announcementModel.js";
+import Meeting from "../models/meetingModel.js";
 export const createTeam = async (req, res, next) => {
   try {
     const { name, description } = req.body;
@@ -133,7 +135,7 @@ export const addTeamMember = async (req, res, next) => {
     const membership = await TeamMember.findOne({
       teamId,
       userId: currentUserId,
-    });
+    }).lean();
 
     if (!membership) {
       return res.status(403).json({
@@ -160,7 +162,7 @@ export const addTeamMember = async (req, res, next) => {
     const existingMember = await TeamMember.findOne({
       teamId,
       userId: user._id,
-    });
+    }).lean();
 
     if (existingMember) {
       return res.status(400).json({
@@ -196,7 +198,7 @@ export const removeTeamMember = async (req, res, next) => {
     const currentMembership = await TeamMember.findOne({
       teamId,
       userId: currentUserId,
-    });
+    }).lean();
 
     if (!currentMembership) {
       return res.status(403).json({
@@ -216,7 +218,7 @@ export const removeTeamMember = async (req, res, next) => {
     const memberToRemove = await TeamMember.findOne({
       teamId,
       userId: memberId,
-    });
+    }).lean();
 
     if (!memberToRemove) {
       return res.status(404).json({
@@ -289,7 +291,7 @@ export const changeMemberRole = async (req, res, next) => {
     const currentMembership = await TeamMember.findOne({
       teamId,
       userId: currentUserId,
-    });
+    }).lean();
 
     if (!currentMembership) {
       return res.status(403).json({
@@ -345,7 +347,7 @@ export const updateTeam = async (req, res, next) => {
     const currentMembership = await TeamMember.findOne({
       teamId,
       userId: currentUserId,
-    });
+    }).lean();
 
     if (!currentMembership) {
       return res.status(403).json({
@@ -403,7 +405,7 @@ export const deleteTeam = async (req, res, next) => {
     const currentMembership = await TeamMember.findOne({
       teamId,
       userId: currentUserId,
-    });
+    }).lean();
     if (!currentMembership) {
       return res.status(403).json({
         message: "You are not a member of this team",
@@ -426,6 +428,8 @@ export const deleteTeam = async (req, res, next) => {
 
     await Task.deleteMany({ teamId });
     await TeamMember.deleteMany({ teamId });
+    await Announcement.deleteMany({ teamId });
+    await Meeting.deleteMany({ teamId });
     await Team.findByIdAndDelete(teamId);
 
     return res.status(200).json({

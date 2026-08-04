@@ -1,3 +1,4 @@
+import React from "react";
 import TaskCard from "./TaskCard.jsx";
 
 function TaskList({ tasks, loading, onEdit, onDelete }) {
@@ -24,7 +25,7 @@ function TaskList({ tasks, loading, onEdit, onDelete }) {
     <div className="grid gap-4">
       {tasks.map((task) => (
         <TaskCard
-          key={task._id}
+          key={task._id || task.id}
           task={task}
           onEdit={onEdit}
           onDelete={onDelete}
@@ -34,4 +35,4 @@ function TaskList({ tasks, loading, onEdit, onDelete }) {
   );
 }
 
-export default TaskList;
+export default React.memo(TaskList);

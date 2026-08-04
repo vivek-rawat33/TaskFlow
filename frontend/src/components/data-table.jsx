@@ -682,7 +682,7 @@ function DraggableRow({ row }) {
 // Main table
 // ---------------------------------------------------------------------------
 
-export function DataTable({
+export const DataTable = React.memo(function DataTable({
   data: initialData,
   teamId,
   members = [],
@@ -889,7 +889,7 @@ export function DataTable({
 
       notify.success("Task created successfully");
     } catch (error) {
-      console.error("Create task failed:", error);
+
       notify.error(error.response?.data?.message || "Failed to create task");
     } finally {
       addingTaskRef.current = false;
@@ -922,7 +922,7 @@ export function DataTable({
 
       notify.success("Task deleted successfully");
     } catch (error) {
-      console.error("Delete task failed:", error);
+
       notify.error(error.response?.data?.message || "Failed to delete task");
     }
   }
@@ -977,7 +977,7 @@ export function DataTable({
 
       notify.success("Task updated successfully");
     } catch (error) {
-      console.error("Update task failed:", error);
+
       setData(previousData);
       notify.error(error.response?.data?.message || "Failed to update task");
     }
@@ -1348,7 +1348,7 @@ export function DataTable({
       </div>
     </Tabs>
   );
-}
+});
 
 function TableCellViewer({
   item,

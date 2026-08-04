@@ -4,6 +4,7 @@ import axios from "axios";
 //globally header ko content-type set krdo
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
+  timeout: 10000,
   headers: {
     "Content-Type": "application/json",
   },

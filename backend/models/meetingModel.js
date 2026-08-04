@@ -46,7 +46,7 @@ const meetingSchema = new mongoose.Schema(
 );
 
 meetingSchema.index(
-  { teamId: 1, date: 1 },
+  { teamId: 1, date: 1, startTime: 1 },
   {
     name: "meetings_by_team_date",
   },

@@ -1,5 +1,4 @@
 import jwt from "jsonwebtoken";
-import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import User from "../models/userModel.js";
 import passport from "passport";
@@ -19,7 +18,7 @@ export const userSignin = async (req, res, next) => {
         message: "password is required",
       });
     }
-    const findUser = await User.findOne({ email }).select("+password");
+    const findUser = await User.findOne({ email }).select("+password").lean();
 
     if (!findUser) {
       return res.status(404).json({
@@ -28,6 +27,7 @@ export const userSignin = async (req, res, next) => {
     }
 
     //check password
+    if (!findUser.password) return res.status(400).json({ message: 'This account uses Google sign-in. Please use Google to log in.' });
     const matchPass = await bcrypt.compare(password, findUser.password);
 
     if (!matchPass) {
@@ -59,7 +59,7 @@ export const userSignup = async (req, res, next) => {
       });
     }
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.exists({ email });
     if (existingUser) {
       return res.status(400).json({ message: "Email already exists" });
     }

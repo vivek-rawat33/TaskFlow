@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 const emptyForm = {
   title: "",
@@ -262,4 +262,4 @@ function TaskForm({ editingTask, onSubmit, onCancel, isSubmitting }) {
   );
 }
 
-export default TaskForm;
+export default React.memo(TaskForm);

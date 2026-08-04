@@ -71,7 +71,7 @@ export const createMeeting = async (req, res, next) => {
     const membership = await TeamMember.findOne({
       teamId,
       userId: currentUserId,
-    });
+    }).lean();
 
     if (!membership) {
       return res.status(403).json({
@@ -118,7 +118,7 @@ export const deleteMeeting = async (req, res, next) => {
     const membership = await TeamMember.findOne({
       teamId,
       userId: currentUserId,
-    });
+    }).lean();
 
     if (!membership) {
       return res.status(403).json({
@@ -132,7 +132,7 @@ export const deleteMeeting = async (req, res, next) => {
       });
     }
 
-    const meeting = await Meeting.findOne({
+    const meeting = await Meeting.findOneAndDelete({
       _id: meetingId,
       teamId,
     });
@@ -142,11 +142,6 @@ export const deleteMeeting = async (req, res, next) => {
         message: "Meeting not found",
       });
     }
-
-    await Meeting.deleteOne({
-      _id: meetingId,
-      teamId,
-    });
 
     return res.status(200).json({
       message: "Meeting deleted successfully",

@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
 import { createTeam, getMyTeams } from "@/api/teamApi";
-import { getTeamTasks } from "@/api/taskApi";
+import { getTeamTasks, getAllUserTasks } from "@/api/taskApi";
 import {
   Sidebar,
   SidebarContent,
@@ -50,7 +50,20 @@ import {
   SettingsIcon,
 } from "lucide-react";
 
-export function AppSidebar({ ...props }) {
+import React from "react";
+
+function normalizeTeam(item) {
+  const team = item.team || item.teamId || item;
+  const id = team?._id || team?.id || item?._id || item?.id || "";
+  return {
+    id: id ? String(id) : "",
+    name: team?.name || item?.name || "Untitled Team",
+    description: team?.description || item?.description || "",
+    role: item?.role || team?.role || "",
+  };
+}
+
+export const AppSidebar = React.memo(function AppSidebar({ ...props }) {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -125,14 +138,18 @@ export function AppSidebar({ ...props }) {
   });
 
   useEffect(() => {
+    let isMounted = true;
     async function checkOverdue() {
-      if (!teamId) {
-        setOverdueCount(0);
-        return;
-      }
       try {
-        const res = await getTeamTasks(teamId);
-        const tasks = res.tasks || [];
+        let tasks = [];
+        if (teamId) {
+          const res = await getTeamTasks(teamId);
+          tasks = res.tasks || [];
+        } else {
+          const res = await getAllUserTasks();
+          tasks = res.tasks || [];
+        }
+
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
@@ -168,13 +185,20 @@ export function AppSidebar({ ...props }) {
           return due < today;
         });
 
-        setOverdueCount(overdue.length);
+        if (isMounted) {
+          setOverdueCount(overdue.length);
+        }
       } catch (error) {
-        // ignore error silently
+        if (isMounted) {
+          setOverdueCount(0);
+        }
       }
     }
 
     checkOverdue();
+    return () => {
+      isMounted = false;
+    };
   }, [teamId, user]);
 
   useEffect(() => {
@@ -190,7 +214,6 @@ export function AppSidebar({ ...props }) {
 
         setTeams(formattedTeams);
       } catch (error) {
-        console.error("Failed to fetch teams:", error);
         notify.error("Failed to fetch teams");
       }
     }
@@ -227,53 +250,41 @@ export function AppSidebar({ ...props }) {
       notify.success("Team created successfully");
 
       if (!team.id) {
-        console.error("Created team has no id:", createdTeam);
         notify.error("Team created but team id missing");
         return;
       }
 
       navigate(`/dashboard/${team.id}`);
     } catch (error) {
-      console.error("Create team failed:", error);
-      notify.error(error.response?.data?.message || "Failed to create team");
+        notify.error(error.response?.data?.message || "Failed to create team");
     }
   }
 
-  function normalizeTeam(item) {
-    const team = item.team || item.teamId || item;
 
-    const id = team?._id || team?.id || item?._id || item?.id || "";
-
-    return {
-      id: id ? String(id) : "",
-      name: team?.name || item?.name || "Untitled Team",
-      description: team?.description || item?.description || "",
-      role: item?.role || team?.role || "",
-    };
-  }
 
   const hasSelectedTeam = Boolean(teamId);
 
   const getTeamPath = (path = "") => {
-    if (!teamId) return "";
+    if (!teamId && teams.length > 0) {
+      return `/dashboard/${teams[0].id}${path}`;
+    }
+    if (!teamId) return "/dashboard";
     return `/dashboard/${teamId}${path}`;
   };
 
-  const documents = hasSelectedTeam
-    ? [
-        {
-          name: "Deadlines",
-          url: getTeamPath("/deadlines"),
-          icon: <ClockIcon />,
-          badgeCount: overdueCount,
-        },
-        {
-          name: "Meetings",
-          url: getTeamPath("/meetings"),
-          icon: <CalendarDaysIcon />,
-        },
-      ]
-    : [];
+  const documents = [
+    {
+      name: "Deadlines",
+      url: getTeamPath("/deadlines"),
+      icon: <ClockIcon />,
+      badgeCount: overdueCount,
+    },
+    {
+      name: "Meetings",
+      url: getTeamPath("/meetings"),
+      icon: <CalendarDaysIcon />,
+    },
+  ];
 
   const navMain = hasSelectedTeam
     ? [
@@ -281,11 +292,6 @@ export function AppSidebar({ ...props }) {
           title: "Dashboard",
           url: getTeamPath(),
           icon: <LayoutDashboardIcon />,
-        },
-        {
-          title: "All Tasks",
-          url: getTeamPath("/tasks"),
-          icon: <ListTodoIcon />,
         },
         {
           title: "My Tasks",
@@ -442,4 +448,4 @@ export function AppSidebar({ ...props }) {
       </Dialog>
     </>
   );
-}
+});

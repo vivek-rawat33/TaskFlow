@@ -1,3 +1,5 @@
+import React from "react";
+
 const statusStyles = {
   pending: "bg-yellow-100 text-yellow-800 ring-yellow-200",
   "in-progress": "bg-blue-100 text-blue-800 ring-blue-200",
@@ -18,14 +20,16 @@ const readableText = (value) => {
     .join(" ");
 };
 
+const dateFormatter = new Intl.DateTimeFormat("en-IN", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+});
+
 const formatDate = (dateValue) => {
   if (!dateValue) return "No due date";
 
-  return new Intl.DateTimeFormat("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(dateValue));
+  return dateFormatter.format(new Date(dateValue));
 };
 
 function TaskCard({ task, onEdit, onDelete }) {
@@ -78,4 +82,4 @@ function TaskCard({ task, onEdit, onDelete }) {
   );
 }
 
-export default TaskCard;
+export default React.memo(TaskCard);

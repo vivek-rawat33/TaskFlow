@@ -2,7 +2,10 @@ import mongoose from "mongoose";
 import Task from "../models/Task.js";
 import { validateTaskInput } from "../utils/validateTask.js";
 import TeamMember from "../models/teamMemberModel.js";
-import teamMemberModel from "../models/teamMemberModel.js";
+
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 const cleanTaskPayload = (body) => {
   const payload = {};
@@ -71,9 +74,10 @@ export const getTasks = async (req, res, next) => {
     }
 
     if (search) {
+      const escapedSearch = escapeRegex(search);
       filter.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
+        { title: { $regex: escapedSearch, $options: "i" } },
+        { description: { $regex: escapedSearch, $options: "i" } },
       ];
     }
 
@@ -88,7 +92,6 @@ export const getTasks = async (req, res, next) => {
       tasks,
     });
   } catch (error) {
-    console.error("GET TASKS ERROR:", error);
     return res.status(500).json({
       message: "Failed to fetch tasks",
       error: error.message,
@@ -117,7 +120,7 @@ export const createTask = async (req, res, next) => {
     const membership = await TeamMember.findOne({
       teamId,
       userId: currentUserId,
-    });
+    }).lean();
     if (!membership) {
       return res
         .status(403)
@@ -134,7 +137,7 @@ export const createTask = async (req, res, next) => {
       const assignedUserMembership = await TeamMember.findOne({
         teamId,
         userId: assignedTo,
-      });
+      }).lean();
 
       if (!assignedUserMembership) {
         return res.status(400).json({ message: "Invalid assignedTo user id" });
@@ -149,7 +152,6 @@ export const createTask = async (req, res, next) => {
     });
     res.status(201).json(task);
   } catch (error) {
-    console.log("Backend error:", error.response?.data);
     next(error);
   }
 };
@@ -177,22 +179,11 @@ export const updateTask = async (req, res, next) => {
     const membership = await TeamMember.findOne({
       teamId,
       userId: currentUserId,
-    });
+    }).lean();
 
     if (!membership) {
       return res.status(403).json({
         message: "You are not a member of this team",
-      });
-    }
-
-    const task = await Task.findOne({
-      _id: taskId,
-      teamId,
-    });
-
-    if (!task) {
-      return res.status(404).json({
-        message: "Task not found",
       });
     }
 
@@ -202,58 +193,41 @@ export const updateTask = async (req, res, next) => {
       });
     }
 
-    if (membership.role === "member") {
-      if (
-        !task.assignedTo ||
-        task.assignedTo.toString() !== currentUserId.toString()
-      ) {
-        return res.status(403).json({
-          message: "You can only update tasks assigned to you",
-        });
-      }
+    let filter = { _id: taskId, teamId };
+    let payload = {};
 
+    if (membership.role === "member") {
       if (!req.body.status) {
         return res.status(400).json({
           message: "Members can only update task status",
         });
       }
+      filter.assignedTo = currentUserId;
+      payload = { status: req.body.status };
+    } else if (membership.role === "owner" || membership.role === "admin") {
+      payload = cleanTaskPayload(req.body);
+    } else {
+      return res.status(403).json({ message: "Invalid role" });
+    }
 
-      const updatedTask = await Task.findOneAndUpdate(
-        { _id: taskId, teamId },
-        { status: req.body.status },
-        {
-          new: true,
-          runValidators: true,
-        },
-      )
-        .populate("createdBy", "name email")
-        .populate("assignedTo", "name email");
+    const updatedTask = await Task.findOneAndUpdate(
+      filter,
+      payload,
+      { new: true, runValidators: true }
+    )
+      .populate("createdBy", "name email")
+      .populate("assignedTo", "name email");
 
-      return res.status(200).json({
-        message: "Task status updated successfully",
-        task: updatedTask,
+    if (!updatedTask) {
+      return res.status(404).json({
+        message: "Task not found or you don't have permission to update it",
       });
     }
 
-    if (membership.role === "owner" || membership.role === "admin") {
-      const payload = cleanTaskPayload(req.body);
-
-      const updatedTask = await Task.findOneAndUpdate(
-        { _id: taskId, teamId },
-        payload,
-        {
-          new: true,
-          runValidators: true,
-        },
-      )
-        .populate("createdBy", "name email")
-        .populate("assignedTo", "name email");
-
-      return res.status(200).json({
-        message: "Task updated successfully",
-        task: updatedTask,
-      });
-    }
+    return res.status(200).json({
+      message: "Task updated successfully",
+      task: updatedTask,
+    });
 
     return res.status(403).json({
       message: "Invalid role",
@@ -276,7 +250,7 @@ export const deleteTask = async (req, res, next) => {
     const membership = await TeamMember.findOne({
       teamId,
       userId: currentUserId,
-    });
+    }).lean();
 
     if (!membership) {
       return res.status(403).json({

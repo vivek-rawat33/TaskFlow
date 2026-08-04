@@ -94,6 +94,9 @@ taskSchema.index(
     name: "tasks_by_team_assignee",
   },
 );
+taskSchema.index({ assignedTo: 1, status: 1 });
+taskSchema.index({ teamId: 1, dueDate: 1 });
+taskSchema.index({ dueDate: 1 });
 
 const Task = mongoose.model("Task", taskSchema);
 
